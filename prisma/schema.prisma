@@ -27,6 +27,8 @@ model Customer {
   invoices  Invoice[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([createdAt])
 }
 
 enum InvoiceStatus {
@@ -53,6 +55,11 @@ model Invoice {
   payments      Payment[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([status, dueDate])
+  @@index([customerId, createdAt])
 }
 
 model InvoiceItem {
@@ -74,4 +81,7 @@ model Payment {
   notes     String?
   paidAt    DateTime @default(now())
   createdAt DateTime @default(now())
+
+  @@index([paidAt])
+  @@index([invoiceId, paidAt])
 }

@@ -59,20 +59,20 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <motion.div
       whileHover={{ y: -3, transition: { duration: 0.2 } }}
-      className={`glass-panel p-6 rounded-2xl relative overflow-hidden transition-all duration-300 ${style.glow}`}
+      className={`glass-panel p-4 rounded-lg relative overflow-hidden transition-all duration-200 ${style.glow}`}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</p>
-          <h3 className="text-2xl font-extrabold text-slate-100 mt-2 tracking-tight">{value}</h3>
+          <p className="text-[11px] font-medium tracking-wide text-slate-400">{title}</p>
+          <h3 className="text-[26px] font-semibold text-slate-100 mt-1 tracking-tight tabular-nums">{value}</h3>
         </div>
-        <div className={`p-3 rounded-xl border ${style.bg} ${style.border} ${style.text}`}>
-          <Icon className="w-6 h-6" />
+        <div className={`p-2 rounded-lg ${style.bg} ${style.text}`}>
+          <Icon className="w-4 h-4" />
         </div>
       </div>
 
       {(subtitle || trend) && (
-        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+        <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
           {subtitle && <span className="text-slate-400">{subtitle}</span>}
           {trend && (
             <span className={`font-semibold ${style.text}`}>

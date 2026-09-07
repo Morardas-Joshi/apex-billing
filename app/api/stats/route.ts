@@ -1,92 +1,89 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+type DashboardStatsRow = {
+  totalOutstanding: number;
+  totalPaidThisMonth: number;
+  totalCustomers: number;
+  totalInvoices: number;
+  draftCount: number;
+  sentCount: number;
+  paidCount: number;
+  overdueCount: number;
+  recentInvoices: Array<{
+    id: string;
+    invoiceNumber: string;
+    customerName: string;
+    total: number;
+    status: string;
+    dueDate: string;
+  }>;
+};
+
 export async function GET() {
   try {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Parallel query execution for lightning-fast stats response
-    const [invoices, totalCustomers, paymentsThisMonth] = await Promise.all([
-      prisma.invoice.findMany({
-        select: {
-          id: true,
-          invoiceNumber: true,
-          status: true,
-          dueDate: true,
-          total: true,
-          customer: {
-            select: { name: true },
-          },
-          payments: {
-            select: { amount: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.customer.count(),
-      prisma.payment.aggregate({
-        _sum: { amount: true },
-        where: {
-          paidAt: {
-            gte: firstDayOfMonth,
-          },
-        },
-      }),
-    ]);
-
-    // Check & auto-update overdue status for unpaid invoices past due date
-    const overdueUpdates = invoices
-      .filter((inv) => inv.status !== 'PAID' && new Date(inv.dueDate) < now && inv.status !== 'OVERDUE')
-      .map((inv) => prisma.invoice.update({ where: { id: inv.id }, data: { status: 'OVERDUE' } }));
-
-    if (overdueUpdates.length > 0) {
-      await Promise.all(overdueUpdates);
-    }
-
-    let totalOutstanding = 0;
-    let draftCount = 0;
-    let sentCount = 0;
-    let paidCount = 0;
-    let overdueCount = 0;
-
-    invoices.forEach((inv) => {
-      const paid = inv.payments.reduce((acc, p) => acc + p.amount, 0);
-      const remaining = Math.max(0, inv.total - paid);
-
-      if (inv.status === 'PAID') {
-        paidCount += 1;
-      } else {
-        totalOutstanding += remaining;
-        if (inv.status === 'DRAFT') draftCount += 1;
-        else if (inv.status === 'SENT') sentCount += 1;
-        else if (inv.status === 'OVERDUE' || new Date(inv.dueDate) < now) overdueCount += 1;
-      }
-    });
-
-    const totalPaidThisMonth = paymentsThisMonth._sum.amount || 0;
-
-    const recentInvoices = invoices.slice(0, 5).map((inv) => ({
-      id: inv.id,
-      invoiceNumber: inv.invoiceNumber,
-      customerName: inv.customer.name,
-      total: inv.total,
-      status: inv.status,
-      dueDate: inv.dueDate,
-    }));
+    // A single database round trip avoids waiting on several serverless database
+    // requests. The CTE also persists overdue statuses without an extra request.
+    const [stats] = await prisma.$queryRaw<DashboardStatsRow[]>`
+      WITH updated_overdue AS (
+        UPDATE "Invoice"
+        SET "status" = 'OVERDUE'
+        WHERE "status" NOT IN ('PAID', 'OVERDUE') AND "dueDate" < ${now}
+        RETURNING "id"
+      )
+      SELECT
+        GREATEST(
+          0,
+          COALESCE((SELECT SUM(i."total") FROM "Invoice" i WHERE i."status" <> 'PAID'), 0) -
+          COALESCE((
+            SELECT SUM(p."amount")
+            FROM "Payment" p
+            INNER JOIN "Invoice" i ON i."id" = p."invoiceId"
+            WHERE i."status" <> 'PAID'
+          ), 0)
+        )::double precision AS "totalOutstanding",
+        COALESCE((
+          SELECT SUM(p."amount") FROM "Payment" p WHERE p."paidAt" >= ${firstDayOfMonth}
+        ), 0)::double precision AS "totalPaidThisMonth",
+        (SELECT COUNT(*) FROM "Customer")::int AS "totalCustomers",
+        (SELECT COUNT(*) FROM "Invoice")::int AS "totalInvoices",
+        COUNT(*) FILTER (WHERE i."status" = 'DRAFT' AND i."dueDate" >= ${now})::int AS "draftCount",
+        COUNT(*) FILTER (WHERE i."status" = 'SENT' AND i."dueDate" >= ${now})::int AS "sentCount",
+        COUNT(*) FILTER (WHERE i."status" = 'PAID')::int AS "paidCount",
+        COUNT(*) FILTER (WHERE i."status" = 'OVERDUE' OR (i."status" <> 'PAID' AND i."dueDate" < ${now}))::int AS "overdueCount",
+        COALESCE((
+          SELECT json_agg(recent ORDER BY recent."createdAt" DESC)
+          FROM (
+            SELECT
+              i."id", i."invoiceNumber", c."name" AS "customerName",
+              i."total",
+              CASE WHEN i."status" <> 'PAID' AND i."dueDate" < ${now}
+                THEN 'OVERDUE' ELSE i."status"::text END AS "status",
+              i."dueDate", i."createdAt"
+            FROM "Invoice" i
+            INNER JOIN "Customer" c ON c."id" = i."customerId"
+            ORDER BY i."createdAt" DESC
+            LIMIT 5
+          ) recent
+        ), '[]'::json) AS "recentInvoices"
+      FROM "Invoice" i
+    `;
 
     return NextResponse.json({
-      totalOutstanding: Math.round(totalOutstanding * 100) / 100,
-      totalPaidThisMonth: Math.round(totalPaidThisMonth * 100) / 100,
-      totalCustomers,
-      totalInvoices: invoices.length,
+      totalOutstanding: Math.round(stats.totalOutstanding * 100) / 100,
+      totalPaidThisMonth: Math.round(stats.totalPaidThisMonth * 100) / 100,
+      totalCustomers: stats.totalCustomers,
+      totalInvoices: stats.totalInvoices,
       statusCounts: {
-        DRAFT: draftCount,
-        SENT: sentCount,
-        PAID: paidCount,
-        OVERDUE: overdueCount,
+        DRAFT: stats.draftCount,
+        SENT: stats.sentCount,
+        PAID: stats.paidCount,
+        OVERDUE: stats.overdueCount,
       },
-      recentInvoices,
+      recentInvoices: stats.recentInvoices,
     });
   } catch (error: any) {
     console.error('Error fetching dashboard stats:', error);

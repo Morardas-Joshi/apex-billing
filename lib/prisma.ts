@@ -3,23 +3,22 @@ import { Pool, neonConfig } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import ws from 'ws';
 
-// Set WebSocket constructor for Neon serverless driver in Node/Vercel serverless environment
 neonConfig.webSocketConstructor = ws;
 
 declare global {
   // eslint-disable-next-line no-var
   var prismaGlobal: PrismaClient | undefined;
+  // eslint-disable-next-line no-var
+  var prismaPool: Pool | undefined;
 }
 
 const createPrismaClient = () => {
   const connectionString = process.env.DATABASE_URL;
 
   if (!connectionString) {
-    console.warn('DATABASE_URL is missing. Initializing standard PrismaClient.');
     return new PrismaClient();
   }
 
-  // Neon Driver Adapter must ONLY be used for Neon Postgres URLs
   const isNeon =
     connectionString.includes('neon.tech') ||
     connectionString.includes('neondatabase') ||
@@ -27,24 +26,31 @@ const createPrismaClient = () => {
 
   if (isNeon) {
     try {
-      const pool = new Pool({ connectionString });
+      const pool =
+        globalThis.prismaPool ??
+        new Pool({
+          connectionString,
+          max: 10,
+          idleTimeoutMillis: 30000,
+          connectionTimeoutMillis: 5000,
+        });
+
+      globalThis.prismaPool = pool;
       const adapter = new PrismaNeon(pool);
-      return new PrismaClient({ adapter });
+      return new PrismaClient({ adapter, log: ['error'] });
     } catch (e) {
       console.error('Failed to initialize Neon driver adapter:', e);
       return new PrismaClient();
     }
   }
 
-  // Standard PrismaClient for local PostgreSQL or SQLite
   return new PrismaClient();
 };
 
 const prisma = globalThis.prismaGlobal ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.prismaGlobal = prisma;
-}
+// Re-use client instance across serverless invocations to eliminate cold start overhead
+globalThis.prismaGlobal = prisma;
 
 export default prisma;
 export { prisma };

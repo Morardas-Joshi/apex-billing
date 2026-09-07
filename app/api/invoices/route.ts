@@ -8,6 +8,10 @@ export async function GET(request: Request) {
     const status = searchParams.get('status');
     const customerId = searchParams.get('customerId');
     const query = searchParams.get('q');
+    const pageParam = searchParams.get('page');
+    const limitParam = searchParams.get('limit');
+    const page = Math.max(1, Number.parseInt(pageParam || '1', 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(limitParam || '50', 10) || 50));
 
     const whereClause: any = {};
 
@@ -27,7 +31,7 @@ export async function GET(request: Request) {
       ];
     }
 
-    const invoices = await prisma.invoice.findMany({
+    const invoiceQuery = {
       where: whereClause,
       select: {
         id: true,
@@ -46,7 +50,28 @@ export async function GET(request: Request) {
         },
       },
       orderBy: { createdAt: 'desc' },
-    });
+    } as const;
+
+    // Preserve the existing array response for payment pickers and dashboard
+    // requests. The invoice table opts into paginated results with `page`.
+    if (pageParam) {
+      const [invoices, total] = await Promise.all([
+        prisma.invoice.findMany({ ...invoiceQuery, skip: (page - 1) * limit, take: limit }),
+        prisma.invoice.count({ where: whereClause }),
+      ]);
+
+      return NextResponse.json({
+        data: invoices,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.max(1, Math.ceil(total / limit)),
+        },
+      }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
+    }
+
+    const invoices = await prisma.invoice.findMany(invoiceQuery);
 
     return NextResponse.json(invoices, {
       headers: {

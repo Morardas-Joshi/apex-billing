@@ -148,6 +148,82 @@ async function main() {
   });
 
   console.log('📜 Sample invoices created:', inv1.invoiceNumber, inv2.invoiceNumber);
+
+  // Repeatable performance-test data: 30 invoices per year, with real line
+  // items and a mix of paid and outstanding balances.
+  const years = [2024, 2025, 2026];
+  const demoCustomers = await Promise.all(
+    years.map((year) =>
+      prisma.customer.upsert({
+        where: { id: `demo-customer-${year}` },
+        update: {},
+        create: {
+          id: `demo-customer-${year}`,
+          name: `Demo Customer ${year}`,
+          email: `demo-${year}@example.test`,
+          phone: '+1 (555) 010-2026',
+          address: `${year} Test Data Avenue, Demo City`,
+          createdAt: new Date(`${year}-01-01T09:00:00.000Z`),
+        },
+      })
+    )
+  );
+
+  const invoicesPerYear = [47, 47, 46]; // 50 additional records after the initial 90
+  const demoInvoices = years.flatMap((year, yearIndex) =>
+    Array.from({ length: invoicesPerYear[yearIndex] }, (_, index) => {
+      const number = index + 1;
+      const month = (index % 12) + 1;
+      const issueDate = new Date(Date.UTC(year, month - 1, (index % 25) + 1));
+      const dueDate = new Date(Date.UTC(year, month - 1, (index % 25) + 15));
+      const subtotal = 500 + number * 25 + yearIndex * 100;
+      const tax = Math.round(subtotal * 0.1 * 100) / 100;
+      const isPaid = index % 3 === 0;
+
+      return {
+        id: `demo-invoice-${year}-${String(number).padStart(3, '0')}`,
+        invoiceNumber: `DEMO-${year}-${String(number).padStart(3, '0')}`,
+        customerId: demoCustomers[yearIndex].id,
+        status: isPaid ? ('PAID' as const) : ('SENT' as const),
+        issueDate,
+        dueDate,
+        subtotal,
+        taxRate: 10,
+        tax,
+        total: subtotal + tax,
+        notes: `Generated performance test invoice for ${year}.`,
+        createdAt: issueDate,
+      };
+    })
+  );
+
+  await prisma.invoice.createMany({ data: demoInvoices, skipDuplicates: true });
+  await prisma.invoiceItem.createMany({
+    data: demoInvoices.map((invoice) => ({
+      id: `demo-item-${invoice.id}`,
+      invoiceId: invoice.id,
+      description: 'Demo service subscription',
+      quantity: 1,
+      unitPrice: invoice.subtotal,
+      amount: invoice.subtotal,
+    })),
+    skipDuplicates: true,
+  });
+  await prisma.payment.createMany({
+    data: demoInvoices
+      .filter((_, index) => index % 3 === 0)
+      .map((invoice) => ({
+        id: `demo-payment-${invoice.id}`,
+        invoiceId: invoice.id,
+        amount: invoice.total,
+        method: 'Bank Transfer',
+        notes: 'Generated test payment',
+        paidAt: invoice.issueDate,
+        createdAt: invoice.issueDate,
+      })),
+    skipDuplicates: true,
+  });
+  console.log(`⚡ Performance test data created: ${demoInvoices.length} invoices across 2024–2026.`);
   console.log('✅ Database seeding complete!');
 }
 

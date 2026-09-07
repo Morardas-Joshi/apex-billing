@@ -82,14 +82,15 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Navbar title="Executive Dashboard" subtitle="Real-time revenue metrics, outstanding balances, and recent invoices" />
+      <Navbar title="Overview" />
 
-      <main className="p-8 space-y-8 flex-1 overflow-y-auto">
+      <main className="command-dashboard p-6 lg:p-8 space-y-6 flex-1 overflow-y-auto">
         {/* Top Header Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 tracking-tight">Financial Summary</h1>
-            <p className="text-xs text-slate-400">Overview of active billing accounts and monthly cash flow</p>
+            <p className="text-xs text-slate-500 mb-1">Tuesday, September 8</p>
+            <h1 className="text-[28px] font-semibold text-slate-100 tracking-tight">Good morning, Admin</h1>
+            <p className="text-xs text-slate-400 mt-1">Here&apos;s what&apos;s happening with your billing today.</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -120,7 +121,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Core Metric Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="metrics-strip grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-px">
           <StatCard
             title="Total Outstanding"
             value={stats ? `$${stats.totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '$0.00'}
