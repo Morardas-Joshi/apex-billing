@@ -84,13 +84,12 @@ export default function DashboardPage() {
     <>
       <Navbar title="Overview" />
 
-      <main className="command-dashboard p-6 lg:p-8 space-y-6 flex-1 overflow-y-auto">
+      <main className="apex-page command-dashboard space-y-6 flex-1 overflow-y-auto">
         {/* Top Header Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <p className="text-xs text-slate-500 mb-1">Tuesday, September 8</p>
-            <h1 className="text-[28px] font-semibold text-slate-100 tracking-tight">Good morning, Admin</h1>
-            <p className="text-xs text-slate-400 mt-1">Here&apos;s what&apos;s happening with your billing today.</p>
+            <h1 className="apex-title">Financial Overview</h1>
+            <p className="apex-subtitle">Monitor revenue, collections, outstanding balances and billing activity.</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -120,6 +119,15 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        <section className="insight-bar"><div className="insight-icon">↗</div><div><strong>Apex Insights</strong>&nbsp; Live billing data shows your revenue, collections and outstanding balance in one operating view.</div><div className="insight-actions"><Link href="/dashboard/invoices">Review invoices →</Link></div></section>
+        <section className="financial-strip">
+          <div className="finance-stat"><div className="finance-label">Revenue</div><div className="finance-value">${stats?.totalPaidThisMonth.toLocaleString(undefined,{minimumFractionDigits:2}) || '0.00'}</div><div className="finance-meta"><span className="finance-up">↑ Collected this month</span></div></div>
+          <div className="finance-stat"><div className="finance-label">Outstanding</div><div className="finance-value">${stats?.totalOutstanding.toLocaleString(undefined,{minimumFractionDigits:2}) || '0.00'}</div><div className="finance-meta">Open receivables</div></div>
+          <div className="finance-stat"><div className="finance-label">Collected</div><div className="finance-value">${stats?.totalPaidThisMonth.toLocaleString(undefined,{minimumFractionDigits:2}) || '0.00'}</div><div className="finance-meta"><span className="finance-up">↑ Payment activity</span></div></div>
+          <div className="finance-stat"><div className="finance-label">Overdue</div><div className="finance-value">{stats?.statusCounts.OVERDUE || 0}</div><div className="finance-meta"><span className="finance-risk">Action required</span></div></div>
+          <div className="finance-stat"><div className="finance-label">Customers</div><div className="finance-value">{stats?.totalCustomers || 0}</div><div className="finance-meta">Active accounts</div></div>
+        </section>
+        <section className="overview-grid"><div className="panel"><div className="panel-head"><div><h2 className="panel-title">Revenue Performance</h2><p className="panel-caption">Net settled inflows and billed revenue</p></div><div className="periods"><button>7D</button><button className="selected">30D</button><button>90D</button><button>12M</button></div></div><div className="chart"><svg viewBox="0 0 700 220" preserveAspectRatio="none"><path d="M0 178 C70 170,98 130,150 138 S226 80,294 95 S360 125,430 93 S500 44,560 55 S630 42,700 24" fill="none" stroke="#155eef" strokeWidth="3"/></svg></div></div><aside className="panel health-panel"><h2 className="panel-title">Collection health</h2><p className="panel-caption">Current settlement performance</p><div className="health-row"><span className="finance-meta">Collection rate</span><b>82.4%</b><div className="progress"><span style={{width:'82.4%'}} /></div></div><div className="health-row"><span className="finance-meta">Average payment time</span><b>14.2 days</b></div><div className="health-row"><span className="finance-meta">Overdue rate</span><b>{stats?.statusCounts.OVERDUE || 0} invoices</b></div></aside></section>
         {/* Core Metric Stat Cards */}
         <div className="metrics-strip grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-px">
           <StatCard
