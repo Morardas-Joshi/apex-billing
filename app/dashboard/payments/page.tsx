@@ -65,8 +65,7 @@ export default function PaymentsPage() {
   };
 
   useEffect(() => {
-    fetchPayments();
-    fetchUnpaidInvoices();
+    Promise.all([fetchPayments(), fetchUnpaidInvoices()]);
   }, []);
 
   const totalCollected = payments.reduce((sum, p) => sum + p.amount, 0);

@@ -63,6 +63,10 @@ export default function InvoicesListPage() {
   };
 
   useEffect(() => {
+    if (!search) {
+      fetchInvoices();
+      return;
+    }
     const timer = setTimeout(() => {
       fetchInvoices();
     }, 300);

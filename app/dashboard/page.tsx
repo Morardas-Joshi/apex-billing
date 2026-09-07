@@ -73,8 +73,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    fetchStats();
-    fetchInvoicesForPayment();
+    Promise.all([fetchStats(), fetchInvoicesForPayment()]);
   }, []);
 
   const openPaymentModal = () => {

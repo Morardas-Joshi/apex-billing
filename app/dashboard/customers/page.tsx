@@ -51,6 +51,10 @@ export default function CustomersPage() {
   };
 
   useEffect(() => {
+    if (!search) {
+      fetchCustomers('');
+      return;
+    }
     const timer = setTimeout(() => {
       fetchCustomers(search);
     }, 300);

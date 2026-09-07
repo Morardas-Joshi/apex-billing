@@ -6,18 +6,34 @@ export async function GET() {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Fetch all invoices with payments
-    const invoices = await prisma.invoice.findMany({
-      include: {
-        customer: {
-          select: { name: true, email: true },
+    // Parallel query execution for lightning-fast stats response
+    const [invoices, totalCustomers, paymentsThisMonth] = await Promise.all([
+      prisma.invoice.findMany({
+        select: {
+          id: true,
+          invoiceNumber: true,
+          status: true,
+          dueDate: true,
+          total: true,
+          customer: {
+            select: { name: true },
+          },
+          payments: {
+            select: { amount: true },
+          },
         },
-        payments: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    const totalCustomers = await prisma.customer.count();
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.customer.count(),
+      prisma.payment.aggregate({
+        _sum: { amount: true },
+        where: {
+          paidAt: {
+            gte: firstDayOfMonth,
+          },
+        },
+      }),
+    ]);
 
     // Check & auto-update overdue status for unpaid invoices past due date
     const overdueUpdates = invoices
@@ -46,16 +62,6 @@ export async function GET() {
         else if (inv.status === 'SENT') sentCount += 1;
         else if (inv.status === 'OVERDUE' || new Date(inv.dueDate) < now) overdueCount += 1;
       }
-    });
-
-    // Total paid this month
-    const paymentsThisMonth = await prisma.payment.aggregate({
-      _sum: { amount: true },
-      where: {
-        paidAt: {
-          gte: firstDayOfMonth,
-        },
-      },
     });
 
     const totalPaidThisMonth = paymentsThisMonth._sum.amount || 0;

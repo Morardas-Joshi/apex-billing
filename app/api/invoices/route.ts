@@ -29,17 +29,30 @@ export async function GET(request: Request) {
 
     const invoices = await prisma.invoice.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        invoiceNumber: true,
+        status: true,
+        issueDate: true,
+        dueDate: true,
+        subtotal: true,
+        tax: true,
+        total: true,
         customer: {
-          select: { id: true, name: true, email: true, phone: true },
+          select: { id: true, name: true, email: true },
         },
-        items: true,
-        payments: true,
+        payments: {
+          select: { amount: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(invoices);
+    return NextResponse.json(invoices, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    });
   } catch (error: any) {
     console.error('Error listing invoices:', error);
     return NextResponse.json({ error: error.message || 'Failed to list invoices' }, { status: 500 });

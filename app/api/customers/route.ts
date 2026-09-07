@@ -17,7 +17,13 @@ export async function GET(request: Request) {
             ],
           }
         : undefined,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        address: true,
+        createdAt: true,
         _count: {
           select: { invoices: true },
         },
@@ -25,7 +31,11 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(customers);
+    return NextResponse.json(customers, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching customers:', error);
     return NextResponse.json({ error: error.message || 'Failed to fetch customers' }, { status: 500 });

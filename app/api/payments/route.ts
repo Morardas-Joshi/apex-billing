@@ -9,9 +9,16 @@ export async function GET(request: Request) {
 
     const payments = await prisma.payment.findMany({
       where: invoiceId ? { invoiceId } : undefined,
-      include: {
+      select: {
+        id: true,
+        amount: true,
+        method: true,
+        paidAt: true,
+        notes: true,
         invoice: {
-          include: {
+          select: {
+            id: true,
+            invoiceNumber: true,
             customer: {
               select: { name: true, email: true },
             },
@@ -21,7 +28,11 @@ export async function GET(request: Request) {
       orderBy: { paidAt: 'desc' },
     });
 
-    return NextResponse.json(payments);
+    return NextResponse.json(payments, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching payments:', error);
     return NextResponse.json({ error: error.message || 'Failed to fetch payments' }, { status: 500 });

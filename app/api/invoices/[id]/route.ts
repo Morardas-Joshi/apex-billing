@@ -22,7 +22,11 @@ export async function GET(
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
-    return NextResponse.json(invoice);
+    return NextResponse.json(invoice, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to fetch invoice' }, { status: 500 });
   }
