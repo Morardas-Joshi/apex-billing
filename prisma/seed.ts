@@ -2,9 +2,9 @@ import prisma from '../lib/prisma';
 import bcrypt from 'bcryptjs';
 
 async function main() {
-  console.log('🌱 Seeding Neon Postgres database...');
+  console.log('🇮🇳 Seeding Indian GST Billing Database...');
 
-  // Ensure tables exist
+  // Ensure tables exist with GST columns
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "User" (
       "id" TEXT PRIMARY KEY,
@@ -12,9 +12,16 @@ async function main() {
       "password" TEXT NOT NULL,
       "name" TEXT NOT NULL,
       "role" TEXT DEFAULT 'ADMIN',
+      "gstin" TEXT,
+      "state" TEXT DEFAULT 'Maharashtra',
+      "stateCode" TEXT DEFAULT '27',
       "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
     );
+
+    ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "gstin" TEXT;
+    ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "state" TEXT DEFAULT 'Maharashtra';
+    ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "stateCode" TEXT DEFAULT '27';
 
     CREATE TABLE IF NOT EXISTS "Customer" (
       "id" TEXT PRIMARY KEY,
@@ -22,9 +29,16 @@ async function main() {
       "email" TEXT NOT NULL,
       "phone" TEXT,
       "address" TEXT,
+      "gstin" TEXT,
+      "state" TEXT,
+      "stateCode" TEXT,
       "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
     );
+
+    ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "gstin" TEXT;
+    ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "state" TEXT;
+    ALTER TABLE "Customer" ADD COLUMN IF NOT EXISTS "stateCode" TEXT;
 
     DO $$ BEGIN
       CREATE TYPE "InvoiceStatus" AS ENUM ('DRAFT', 'SENT', 'PAID', 'OVERDUE');
@@ -40,22 +54,36 @@ async function main() {
       "issueDate" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
       "dueDate" TIMESTAMP(3) NOT NULL,
       "subtotal" DOUBLE PRECISION NOT NULL,
-      "taxRate" DOUBLE PRECISION DEFAULT 0.0,
+      "taxRate" DOUBLE PRECISION DEFAULT 18.0,
       "tax" DOUBLE PRECISION DEFAULT 0.0,
+      "cgst" DOUBLE PRECISION DEFAULT 0.0,
+      "sgst" DOUBLE PRECISION DEFAULT 0.0,
+      "igst" DOUBLE PRECISION DEFAULT 0.0,
+      "isInterState" BOOLEAN DEFAULT FALSE,
+      "placeOfSupply" TEXT DEFAULT '27-Maharashtra',
       "total" DOUBLE PRECISION NOT NULL,
       "notes" TEXT,
       "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
     );
 
+    ALTER TABLE "Invoice" ADD COLUMN IF NOT EXISTS "cgst" DOUBLE PRECISION DEFAULT 0.0;
+    ALTER TABLE "Invoice" ADD COLUMN IF NOT EXISTS "sgst" DOUBLE PRECISION DEFAULT 0.0;
+    ALTER TABLE "Invoice" ADD COLUMN IF NOT EXISTS "igst" DOUBLE PRECISION DEFAULT 0.0;
+    ALTER TABLE "Invoice" ADD COLUMN IF NOT EXISTS "isInterState" BOOLEAN DEFAULT FALSE;
+    ALTER TABLE "Invoice" ADD COLUMN IF NOT EXISTS "placeOfSupply" TEXT DEFAULT '27-Maharashtra';
+
     CREATE TABLE IF NOT EXISTS "InvoiceItem" (
       "id" TEXT PRIMARY KEY,
       "invoiceId" TEXT NOT NULL REFERENCES "Invoice"("id") ON DELETE CASCADE,
       "description" TEXT NOT NULL,
+      "hsnSac" TEXT DEFAULT '998311',
       "quantity" INTEGER NOT NULL,
       "unitPrice" DOUBLE PRECISION NOT NULL,
       "amount" DOUBLE PRECISION NOT NULL
     );
+
+    ALTER TABLE "InvoiceItem" ADD COLUMN IF NOT EXISTS "hsnSac" TEXT DEFAULT '998311';
 
     CREATE TABLE IF NOT EXISTS "Payment" (
       "id" TEXT PRIMARY KEY,
@@ -72,62 +100,137 @@ async function main() {
   const adminPassword = await bcrypt.hash('admin123', 10);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@billing.com' },
-    update: {},
+    update: {
+      gstin: '27AAAAA0000A1Z5',
+      state: 'Maharashtra',
+      stateCode: '27',
+    },
     create: {
       id: 'usr-admin-1',
       email: 'admin@billing.com',
       password: adminPassword,
-      name: 'Admin User',
+      name: 'Apex Infotech India Pvt Ltd',
       role: 'ADMIN',
+      gstin: '27AAAAA0000A1Z5',
+      state: 'Maharashtra',
+      stateCode: '27',
     },
   });
-  console.log('👤 Admin user created/verified:', admin.email);
+  console.log('👤 Indian Admin Business initialized:', admin.name, '| GSTIN:', admin.gstin);
 
-  // Create Sample Customers
-  const customer1 = await prisma.customer.upsert({
+  // Create Sample Indian Customers
+  const cust1 = await prisma.customer.upsert({
     where: { id: 'cust-101' },
-    update: {},
+    update: {
+      name: 'Tata Consultancy Services Ltd',
+      email: 'accounts@tcs.com',
+      phone: '+91 98200 12345',
+      address: 'TCS House, Raveline Street, Fort, Mumbai, Maharashtra 400001',
+      gstin: '27AAACT2727Q1ZW',
+      state: 'Maharashtra',
+      stateCode: '27',
+    },
     create: {
       id: 'cust-101',
-      name: 'Acme Technologies Inc.',
-      email: 'billing@acmetechnologies.com',
-      phone: '+1 (555) 019-2831',
-      address: '742 Evergreen Terrace, Suite 400, San Francisco, CA 94107',
+      name: 'Tata Consultancy Services Ltd',
+      email: 'accounts@tcs.com',
+      phone: '+91 98200 12345',
+      address: 'TCS House, Raveline Street, Fort, Mumbai, Maharashtra 400001',
+      gstin: '27AAACT2727Q1ZW',
+      state: 'Maharashtra',
+      stateCode: '27',
     },
   });
 
-  const customer2 = await prisma.customer.upsert({
+  const cust2 = await prisma.customer.upsert({
     where: { id: 'cust-102' },
-    update: {},
+    update: {
+      name: 'Infosys Limited',
+      email: 'finance@infosys.com',
+      phone: '+91 80 2852 0261',
+      address: 'Electronics City, Hosur Road, Bengaluru, Karnataka 560100',
+      gstin: '29AAACI4848L1ZI',
+      state: 'Karnataka',
+      stateCode: '29',
+    },
     create: {
       id: 'cust-102',
-      name: 'Starlight Media House',
-      email: 'finance@starlightmedia.io',
-      phone: '+1 (555) 048-9120',
-      address: '100 Broadway, 12th Floor, New York, NY 10005',
+      name: 'Infosys Limited',
+      email: 'finance@infosys.com',
+      phone: '+91 80 2852 0261',
+      address: 'Electronics City, Hosur Road, Bengaluru, Karnataka 560100',
+      gstin: '29AAACI4848L1ZI',
+      state: 'Karnataka',
+      stateCode: '29',
     },
   });
 
-  console.log('🏢 Sample customers created.');
+  console.log('🏢 Sample Indian customers created with GSTIN details.');
 
-  // Create Sample Invoices
+  // Create GST Tax Invoices
+  // Invoice 1: Intra-State (Maharashtra to Maharashtra -> CGST 9% + SGST 9%)
+  const sub1 = 150000.0;
+  const cgst1 = 13500.0; // 9%
+  const sgst1 = 13500.0; // 9%
+  const tax1 = 27000.0;  // 18% Total GST
+  const tot1 = 177000.0;
+
   const inv1 = await prisma.invoice.upsert({
     where: { invoiceNumber: 'INV-2026-001' },
     update: {},
     create: {
       id: 'inv-101',
       invoiceNumber: 'INV-2026-001',
-      customerId: customer1.id,
+      customerId: cust1.id,
       status: 'PAID',
       issueDate: new Date('2026-08-01'),
       dueDate: new Date('2026-08-15'),
-      subtotal: 3500.0,
-      taxRate: 10.0,
-      tax: 350.0,
-      total: 3850.0,
-      notes: 'Thank you for your business!',
+      subtotal: sub1,
+      taxRate: 18.0,
+      tax: tax1,
+      cgst: cgst1,
+      sgst: sgst1,
+      igst: 0.0,
+      isInterState: false,
+      placeOfSupply: '27-Maharashtra',
+      total: tot1,
+      notes: 'Terms: 18% GST Applicable. Payment received via UPI/NEFT. Thank you!',
+      items: {
+        create: [
+          {
+            description: 'Enterprise Cloud ERP Customization',
+            hsnSac: '998311',
+            quantity: 1,
+            unitPrice: 100000.0,
+            amount: 100000.0,
+          },
+          {
+            description: 'Annual Maintenance Contract (Q3)',
+            hsnSac: '998313',
+            quantity: 1,
+            unitPrice: 50000.0,
+            amount: 50000.0,
+          },
+        ],
+      },
+      payments: {
+        create: [
+          {
+            amount: tot1,
+            method: 'NEFT/RTGS',
+            notes: 'HDFC Bank UTR Ref: HDFCN26223019842',
+            paidAt: new Date('2026-08-10'),
+          },
+        ],
+      },
     },
   });
+
+  // Invoice 2: Inter-State (Maharashtra to Karnataka -> IGST 18%)
+  const sub2 = 80000.0;
+  const igst2 = 14400.0; // 18% IGST
+  const tax2 = 14400.0;
+  const tot2 = 94400.0;
 
   const inv2 = await prisma.invoice.upsert({
     where: { invoiceNumber: 'INV-2026-002' },
@@ -135,96 +238,36 @@ async function main() {
     create: {
       id: 'inv-102',
       invoiceNumber: 'INV-2026-002',
-      customerId: customer2.id,
+      customerId: cust2.id,
       status: 'SENT',
       issueDate: new Date('2026-09-01'),
       dueDate: new Date('2026-09-20'),
-      subtotal: 1800.0,
-      taxRate: 8.0,
-      tax: 144.0,
-      total: 1944.0,
-      notes: 'Payment due within 20 days.',
+      subtotal: sub2,
+      taxRate: 18.0,
+      tax: tax2,
+      cgst: 0.0,
+      sgst: 0.0,
+      igst: igst2,
+      isInterState: true,
+      placeOfSupply: '29-Karnataka',
+      total: tot2,
+      notes: 'GST Tax Invoice (Inter-State IGST 18%). Pay via UPI / Bank Transfer.',
+      items: {
+        create: [
+          {
+            description: 'Software API Integration & Custom Workflows',
+            hsnSac: '998314',
+            quantity: 1,
+            unitPrice: 80000.0,
+            amount: 80000.0,
+          },
+        ],
+      },
     },
   });
 
-  console.log('📜 Sample invoices created:', inv1.invoiceNumber, inv2.invoiceNumber);
-
-  // Repeatable performance-test data: 30 invoices per year, with real line
-  // items and a mix of paid and outstanding balances.
-  const years = [2024, 2025, 2026];
-  const demoCustomers = await Promise.all(
-    years.map((year) =>
-      prisma.customer.upsert({
-        where: { id: `demo-customer-${year}` },
-        update: {},
-        create: {
-          id: `demo-customer-${year}`,
-          name: `Demo Customer ${year}`,
-          email: `demo-${year}@example.test`,
-          phone: '+1 (555) 010-2026',
-          address: `${year} Test Data Avenue, Demo City`,
-          createdAt: new Date(`${year}-01-01T09:00:00.000Z`),
-        },
-      })
-    )
-  );
-
-  const invoicesPerYear = [47, 47, 46]; // 50 additional records after the initial 90
-  const demoInvoices = years.flatMap((year, yearIndex) =>
-    Array.from({ length: invoicesPerYear[yearIndex] }, (_, index) => {
-      const number = index + 1;
-      const month = (index % 12) + 1;
-      const issueDate = new Date(Date.UTC(year, month - 1, (index % 25) + 1));
-      const dueDate = new Date(Date.UTC(year, month - 1, (index % 25) + 15));
-      const subtotal = 500 + number * 25 + yearIndex * 100;
-      const tax = Math.round(subtotal * 0.1 * 100) / 100;
-      const isPaid = index % 3 === 0;
-
-      return {
-        id: `demo-invoice-${year}-${String(number).padStart(3, '0')}`,
-        invoiceNumber: `DEMO-${year}-${String(number).padStart(3, '0')}`,
-        customerId: demoCustomers[yearIndex].id,
-        status: isPaid ? ('PAID' as const) : ('SENT' as const),
-        issueDate,
-        dueDate,
-        subtotal,
-        taxRate: 10,
-        tax,
-        total: subtotal + tax,
-        notes: `Generated performance test invoice for ${year}.`,
-        createdAt: issueDate,
-      };
-    })
-  );
-
-  await prisma.invoice.createMany({ data: demoInvoices, skipDuplicates: true });
-  await prisma.invoiceItem.createMany({
-    data: demoInvoices.map((invoice) => ({
-      id: `demo-item-${invoice.id}`,
-      invoiceId: invoice.id,
-      description: 'Demo service subscription',
-      quantity: 1,
-      unitPrice: invoice.subtotal,
-      amount: invoice.subtotal,
-    })),
-    skipDuplicates: true,
-  });
-  await prisma.payment.createMany({
-    data: demoInvoices
-      .filter((_, index) => index % 3 === 0)
-      .map((invoice) => ({
-        id: `demo-payment-${invoice.id}`,
-        invoiceId: invoice.id,
-        amount: invoice.total,
-        method: 'Bank Transfer',
-        notes: 'Generated test payment',
-        paidAt: invoice.issueDate,
-        createdAt: invoice.issueDate,
-      })),
-    skipDuplicates: true,
-  });
-  console.log(`⚡ Performance test data created: ${demoInvoices.length} invoices across 2024–2026.`);
-  console.log('✅ Database seeding complete!');
+  console.log('📜 Indian GST Tax Invoices created:', inv1.invoiceNumber, inv2.invoiceNumber);
+  console.log('✅ Indian GST database seeding complete!');
 }
 
 main()

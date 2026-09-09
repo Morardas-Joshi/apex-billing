@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-// GET /api/invoices - List invoices with filtering, search, and pagination
+// GET /api/invoices - List invoices with GST details
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const customerId = searchParams.get('customerId');
     const query = searchParams.get('q');
-    const pageParam = searchParams.get('page');
-    const limitParam = searchParams.get('limit');
-    const page = Math.max(1, Number.parseInt(pageParam || '1', 10) || 1);
-    const limit = Math.min(100, Math.max(1, Number.parseInt(limitParam || '50', 10) || 50));
 
     const whereClause: any = {};
 
@@ -28,10 +24,11 @@ export async function GET(request: Request) {
         { invoiceNumber: { contains: query, mode: 'insensitive' } },
         { customer: { name: { contains: query, mode: 'insensitive' } } },
         { customer: { email: { contains: query, mode: 'insensitive' } } },
+        { customer: { gstin: { contains: query, mode: 'insensitive' } } },
       ];
     }
 
-    const invoiceQuery = {
+    const invoices = await prisma.invoice.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -40,38 +37,23 @@ export async function GET(request: Request) {
         issueDate: true,
         dueDate: true,
         subtotal: true,
+        taxRate: true,
         tax: true,
+        cgst: true,
+        sgst: true,
+        igst: true,
+        isInterState: true,
+        placeOfSupply: true,
         total: true,
         customer: {
-          select: { id: true, name: true, email: true },
+          select: { id: true, name: true, email: true, gstin: true, state: true },
         },
         payments: {
           select: { amount: true },
         },
       },
       orderBy: { createdAt: 'desc' },
-    } as const;
-
-    // Preserve the existing array response for payment pickers and dashboard
-    // requests. The invoice table opts into paginated results with `page`.
-    if (pageParam) {
-      const [invoices, total] = await Promise.all([
-        prisma.invoice.findMany({ ...invoiceQuery, skip: (page - 1) * limit, take: limit }),
-        prisma.invoice.count({ where: whereClause }),
-      ]);
-
-      return NextResponse.json({
-        data: invoices,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.max(1, Math.ceil(total / limit)),
-        },
-      }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
-    }
-
-    const invoices = await prisma.invoice.findMany(invoiceQuery);
+    });
 
     return NextResponse.json(invoices, {
       headers: {
@@ -84,11 +66,21 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/invoices - Create a new invoice
+// POST /api/invoices - Create a new Indian GST Tax Invoice
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { customerId, issueDate, dueDate, items, taxRate = 0, notes, status = 'DRAFT' } = body;
+    const {
+      customerId,
+      issueDate,
+      dueDate,
+      items,
+      taxRate = 18.0,
+      isInterState = false,
+      placeOfSupply = '27-Maharashtra',
+      notes,
+      status = 'DRAFT',
+    } = body;
 
     if (!customerId || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -97,12 +89,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Auto-generate invoice number if not provided
+    // Auto-generate GST Tax Invoice Number (e.g. INV-2026-001)
     const year = new Date().getFullYear();
     const count = await prisma.invoice.count();
     const invoiceNumber = `INV-${year}-${(count + 1).toString().padStart(3, '0')}`;
 
-    // Calculate item amounts & totals
+    // Calculate item amounts & subtotal
     let subtotal = 0;
     const itemsData = items.map((item: any) => {
       const quantity = Math.max(1, parseInt(item.quantity) || 1);
@@ -110,16 +102,31 @@ export async function POST(request: Request) {
       const amount = quantity * unitPrice;
       subtotal += amount;
       return {
-        description: item.description || 'Service/Product Item',
+        description: item.description || 'Goods / Service Item',
+        hsnSac: item.hsnSac || '998311',
         quantity,
         unitPrice,
         amount,
       };
     });
 
-    const calculatedTaxRate = parseFloat(taxRate) || 0;
-    const tax = Math.round((subtotal * (calculatedTaxRate / 100)) * 100) / 100;
-    const total = Math.round((subtotal + tax) * 100) / 100;
+    const calculatedTaxRate = parseFloat(taxRate) || 18.0;
+    const totalTaxAmount = Math.round(subtotal * (calculatedTaxRate / 100) * 100) / 100;
+
+    let cgst = 0;
+    let sgst = 0;
+    let igst = 0;
+
+    if (isInterState) {
+      // Inter-State Sale (IGST applies at full GST rate)
+      igst = totalTaxAmount;
+    } else {
+      // Intra-State Sale (CGST + SGST split 50/50)
+      cgst = Math.round((totalTaxAmount / 2) * 100) / 100;
+      sgst = Math.round((totalTaxAmount / 2) * 100) / 100;
+    }
+
+    const total = Math.round((subtotal + totalTaxAmount) * 100) / 100;
 
     const invoice = await prisma.invoice.create({
       data: {
@@ -127,10 +134,15 @@ export async function POST(request: Request) {
         customerId,
         status,
         issueDate: issueDate ? new Date(issueDate) : new Date(),
-        dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // Default +14 days
+        dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         subtotal,
         taxRate: calculatedTaxRate,
-        tax,
+        tax: totalTaxAmount,
+        cgst,
+        sgst,
+        igst,
+        isInterState,
+        placeOfSupply,
         total,
         notes: notes || null,
         items: {
@@ -146,7 +158,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(invoice, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating invoice:', error);
+    console.error('Error creating GST invoice:', error);
     return NextResponse.json({ error: error.message || 'Failed to create invoice' }, { status: 500 });
   }
 }

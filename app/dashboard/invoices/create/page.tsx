@@ -8,23 +8,26 @@ import {
   Plus,
   Trash2,
   Building,
-  Calendar,
   FileText,
-  DollarSign,
   Loader2,
-  CheckCircle2,
+  FileCheck,
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { CustomerModal } from '@/components/CustomerModal';
+import { formatINR, INDIAN_STATES } from '@/lib/formatters';
 
 interface Customer {
   id: string;
   name: string;
   email: string;
+  gstin?: string | null;
+  state?: string | null;
+  stateCode?: string | null;
 }
 
 interface LineItem {
   description: string;
+  hsnSac: string;
   quantity: number;
   unitPrice: number;
 }
@@ -38,15 +41,19 @@ export default function CreateInvoicePage() {
     new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
   const [items, setItems] = useState<LineItem[]>([
-    { description: 'Web Application Development Services', quantity: 1, unitPrice: 1500 },
+    { description: 'Enterprise Cloud Application Consultancy', hsnSac: '998311', quantity: 1, unitPrice: 100000 },
   ]);
-  const [taxRate, setTaxRate] = useState<number>(10);
-  const [notes, setNotes] = useState('Thank you for choosing Apex Billing! Payment due within terms.');
+
+  // GST State Parameters
+  const [taxRate, setTaxRate] = useState<number>(18);
+  const [isInterState, setIsInterState] = useState<boolean>(false);
+  const [placeOfSupply, setPlaceOfSupply] = useState<string>('27-Maharashtra');
+  const [notes, setNotes] = useState('GST Tax Invoice. Terms: 18% GST Applicable. Payment via UPI / Bank Transfer.');
   const [status, setStatus] = useState<'DRAFT' | 'SENT'>('SENT');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Quick Customer Creation Modal
+  // Customer Modal
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
 
   const fetchCustomers = async () => {
@@ -57,6 +64,7 @@ export default function CreateInvoicePage() {
         setCustomers(data);
         if (data.length > 0 && !customerId) {
           setCustomerId(data[0].id);
+          checkInterState(data[0]);
         }
       }
     } catch (e) {
@@ -68,8 +76,26 @@ export default function CreateInvoicePage() {
     fetchCustomers();
   }, []);
 
+  const checkInterState = (cust: Customer) => {
+    if (cust.stateCode && cust.stateCode !== '27') {
+      setIsInterState(true);
+      setPlaceOfSupply(`${cust.stateCode}-${cust.state || 'Other State'}`);
+    } else {
+      setIsInterState(false);
+      setPlaceOfSupply('27-Maharashtra');
+    }
+  };
+
+  const handleCustomerSelect = (id: string) => {
+    setCustomerId(id);
+    const selected = customers.find((c) => c.id === id);
+    if (selected) {
+      checkInterState(selected);
+    }
+  };
+
   const handleAddItem = () => {
-    setItems([...items, { description: '', quantity: 1, unitPrice: 0 }]);
+    setItems([...items, { description: '', hsnSac: '998311', quantity: 1, unitPrice: 0 }]);
   };
 
   const handleRemoveItem = (index: number) => {
@@ -89,10 +115,13 @@ export default function CreateInvoicePage() {
     setItems(updated);
   };
 
-  // Real-time calculations
+  // Real-time GST calculations
   const subtotal = items.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
-  const tax = Math.round(subtotal * (taxRate / 100) * 100) / 100;
-  const total = Math.round((subtotal + tax) * 100) / 100;
+  const totalTaxAmount = Math.round(subtotal * (taxRate / 100) * 100) / 100;
+  const cgst = isInterState ? 0 : Math.round((totalTaxAmount / 2) * 100) / 100;
+  const sgst = isInterState ? 0 : Math.round((totalTaxAmount / 2) * 100) / 100;
+  const igst = isInterState ? totalTaxAmount : 0;
+  const total = Math.round((subtotal + totalTaxAmount) * 100) / 100;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,6 +148,8 @@ export default function CreateInvoicePage() {
           dueDate,
           items,
           taxRate,
+          isInterState,
+          placeOfSupply,
           notes,
           status,
         }),
@@ -139,7 +170,7 @@ export default function CreateInvoicePage() {
 
   return (
     <>
-      <Navbar title="Create Invoice" subtitle="Generate a new billing invoice with automated tax calculations" />
+      <Navbar title="Create GST Tax Invoice" subtitle="Generate a GST compliant tax invoice with CGST, SGST, IGST, and HSN/SAC codes" />
 
       <main className="p-8 space-y-6 flex-1 overflow-y-auto max-w-5xl">
         <div className="flex items-center justify-between">
@@ -159,12 +190,12 @@ export default function CreateInvoicePage() {
             </div>
           )}
 
-          {/* Customer & Dates Card */}
+          {/* Customer & GST Parameters Card */}
           <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
                 <Building className="w-5 h-5 text-indigo-400" />
-                <span>Invoice Client Details</span>
+                <span>GST Tax Invoice Details</span>
               </h2>
 
               <button
@@ -173,7 +204,7 @@ export default function CreateInvoicePage() {
                 className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 hover:underline"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add New Customer</span>
+                <span>Add New GST Customer</span>
               </button>
             </div>
 
@@ -184,7 +215,7 @@ export default function CreateInvoicePage() {
                 </label>
                 <select
                   value={customerId}
-                  onChange={(e) => setCustomerId(e.target.value)}
+                  onChange={(e) => handleCustomerSelect(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 bg-slate-900"
                 >
                   {customers.length === 0 ? (
@@ -192,7 +223,7 @@ export default function CreateInvoicePage() {
                   ) : (
                     customers.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name} ({c.email})
+                        {c.name} {c.gstin ? `(GSTIN: ${c.gstin})` : ''}
                       </option>
                     ))
                   )}
@@ -225,14 +256,65 @@ export default function CreateInvoicePage() {
                 />
               </div>
             </div>
+
+            {/* GST Tax Type & Place of Supply */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-800/80">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+                  GST Rate %
+                </label>
+                <select
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 bg-slate-900 font-bold"
+                >
+                  <option value={18}>18% GST (Standard Services/Goods)</option>
+                  <option value={12}>12% GST</option>
+                  <option value={5}>5% GST</option>
+                  <option value={28}>28% GST</option>
+                  <option value={0}>0% GST (Exempt)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+                  Supply Type
+                </label>
+                <select
+                  value={isInterState ? 'INTER' : 'INTRA'}
+                  onChange={(e) => setIsInterState(e.target.value === 'INTER')}
+                  className="w-full px-3 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 bg-slate-900 font-semibold"
+                >
+                  <option value="INTRA">Intra-State (CGST {taxRate / 2}% + SGST {taxRate / 2}%)</option>
+                  <option value="INTER">Inter-State (IGST {taxRate}%)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+                  Place of Supply (State)
+                </label>
+                <select
+                  value={placeOfSupply}
+                  onChange={(e) => setPlaceOfSupply(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 bg-slate-900"
+                >
+                  {INDIAN_STATES.map((s) => (
+                    <option key={s.code} value={`${s.code}-${s.name}`}>
+                      {s.code} - {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
-          {/* Dynamic Line Items Section */}
+          {/* Dynamic Line Items Section with HSN/SAC */}
           <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-indigo-400" />
-                <span>Line Items</span>
+                <span>Goods / Services Items</span>
               </h2>
 
               <button
@@ -247,10 +329,11 @@ export default function CreateInvoicePage() {
 
             <div className="space-y-3">
               <div className="grid grid-cols-12 gap-3 text-[11px] uppercase tracking-wider font-semibold text-slate-400 px-2">
-                <div className="col-span-6">Description</div>
-                <div className="col-span-2 text-center">Qty</div>
-                <div className="col-span-2 text-right">Unit Price ($)</div>
-                <div className="col-span-2 text-right">Amount ($)</div>
+                <div className="col-span-5">Description</div>
+                <div className="col-span-2">HSN/SAC Code</div>
+                <div className="col-span-1 text-center">Qty</div>
+                <div className="col-span-2 text-right">Unit Rate (₹)</div>
+                <div className="col-span-2 text-right">Amount (₹)</div>
               </div>
 
               {items.map((item, index) => {
@@ -258,10 +341,10 @@ export default function CreateInvoicePage() {
 
                 return (
                   <div key={index} className="grid grid-cols-12 gap-3 items-center p-2 rounded-xl bg-slate-900/60 border border-slate-800">
-                    <div className="col-span-6">
+                    <div className="col-span-5">
                       <input
                         type="text"
-                        placeholder="Item or service description..."
+                        placeholder="Service or product description..."
                         value={item.description}
                         onChange={(e) => handleItemChange(index, 'description', e.target.value)}
                         className="w-full px-3 py-2 rounded-lg glass-input text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
@@ -270,27 +353,37 @@ export default function CreateInvoicePage() {
 
                     <div className="col-span-2">
                       <input
+                        type="text"
+                        placeholder="e.g. 998311"
+                        value={item.hsnSac}
+                        onChange={(e) => handleItemChange(index, 'hsnSac', e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg glass-input text-xs font-mono text-slate-100 focus:outline-none focus:border-indigo-500 uppercase"
+                      />
+                    </div>
+
+                    <div className="col-span-1">
+                      <input
                         type="number"
                         min="1"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg glass-input text-xs text-slate-100 text-center focus:outline-none focus:border-indigo-500"
+                        className="w-full px-2 py-2 rounded-lg glass-input text-xs text-slate-100 text-center focus:outline-none focus:border-indigo-500"
                       />
                     </div>
 
                     <div className="col-span-2">
                       <input
                         type="number"
-                        step="0.01"
+                        step="1"
                         min="0"
                         value={item.unitPrice}
                         onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg glass-input text-xs text-slate-100 text-right focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-2 rounded-lg glass-input text-xs text-slate-100 text-right focus:outline-none focus:border-indigo-500 font-semibold"
                       />
                     </div>
 
                     <div className="col-span-2 flex items-center justify-end gap-2">
-                      <span className="font-bold text-slate-100 text-xs">${itemAmount.toFixed(2)}</span>
+                      <span className="font-bold text-slate-100 text-xs">{formatINR(itemAmount)}</span>
                       {items.length > 1 && (
                         <button
                           type="button"
@@ -306,46 +399,53 @@ export default function CreateInvoicePage() {
               })}
             </div>
 
-            {/* Calculations & Notes Summary */}
+            {/* GST Tax Calculation Breakdown Summary */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-800">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
-                  Invoice Notes / Payment Terms
+                  Terms & Conditions / Bank Details
                 </label>
                 <textarea
-                  rows={4}
+                  rows={5}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Terms, bank account details, wire info..."
+                  placeholder="UPI ID, Bank Account details, Terms..."
                   className="w-full p-3 rounded-xl glass-input text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
-              <div className="space-y-3 bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
-                <div className="flex items-center justify-between text-xs text-slate-300">
-                  <span>Subtotal</span>
-                  <span className="font-bold text-slate-100">${subtotal.toFixed(2)}</span>
+              <div className="space-y-2.5 bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-xs">
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>Taxable Amount (Subtotal)</span>
+                  <span className="font-bold text-slate-100">{formatINR(subtotal)}</span>
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-slate-300">
-                  <div className="flex items-center gap-2">
-                    <span>Tax Rate (%)</span>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      value={taxRate}
-                      onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                      className="w-16 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-xs text-slate-100 text-center"
-                    />
+                {!isInterState ? (
+                  <>
+                    <div className="flex items-center justify-between text-slate-400">
+                      <span>Central GST (CGST {taxRate / 2}%)</span>
+                      <span className="font-semibold text-slate-200">{formatINR(cgst)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-400">
+                      <span>State GST (SGST {taxRate / 2}%)</span>
+                      <span className="font-semibold text-slate-200">{formatINR(sgst)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between text-purple-400">
+                    <span>Integrated GST (IGST {taxRate}%)</span>
+                    <span className="font-semibold">{formatINR(igst)}</span>
                   </div>
-                  <span className="font-bold text-slate-100">${tax.toFixed(2)}</span>
+                )}
+
+                <div className="flex items-center justify-between text-slate-300 pt-2 border-t border-slate-800/80">
+                  <span>Total Tax Amount ({taxRate}%)</span>
+                  <span className="font-bold text-indigo-300">{formatINR(totalTaxAmount)}</span>
                 </div>
 
                 <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-base font-extrabold text-white">
-                  <span>Total Due</span>
-                  <span className="text-indigo-400 text-lg">${total.toFixed(2)}</span>
+                  <span>Grand Total Due (₹)</span>
+                  <span className="text-emerald-400 text-lg">{formatINR(total)}</span>
                 </div>
               </div>
             </div>
@@ -354,13 +454,13 @@ export default function CreateInvoicePage() {
           {/* Form Actions */}
           <div className="flex items-center justify-between pt-4">
             <div className="flex items-center gap-3">
-              <label className="text-xs font-medium text-slate-400">Save Initial Status:</label>
+              <label className="text-xs font-medium text-slate-400">Status:</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
                 className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none"
               >
-                <option value="SENT">Issued / Sent</option>
+                <option value="SENT">Issue Tax Invoice</option>
                 <option value="DRAFT">Save as Draft</option>
               </select>
             </div>
@@ -378,7 +478,7 @@ export default function CreateInvoicePage() {
                 className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2 disabled:opacity-50"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                <span>Generate Invoice</span>
+                <span>Generate GST Tax Invoice</span>
               </button>
             </div>
           </div>

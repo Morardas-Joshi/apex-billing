@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import './apex.css';
+import './invoice.css';
 
 export const metadata: Metadata = {
   title: 'Apex Billing — Simple Serverless Billing & Invoicing',

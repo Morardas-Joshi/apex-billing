@@ -14,6 +14,7 @@ export async function GET(request: Request) {
               { name: { contains: query, mode: 'insensitive' } },
               { email: { contains: query, mode: 'insensitive' } },
               { phone: { contains: query, mode: 'insensitive' } },
+              { gstin: { contains: query, mode: 'insensitive' } },
             ],
           }
         : undefined,
@@ -23,6 +24,9 @@ export async function GET(request: Request) {
         email: true,
         phone: true,
         address: true,
+        gstin: true,
+        state: true,
+        stateCode: true,
         createdAt: true,
         _count: {
           select: { invoices: true },
@@ -42,11 +46,11 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/customers - Create new customer
+// POST /api/customers - Create new customer with GSTIN details
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, phone, address } = body;
+    const { name, email, phone, address, gstin, state, stateCode } = body;
 
     if (!name || !email) {
       return NextResponse.json({ error: 'Name and email are required' }, { status: 400 });
@@ -58,6 +62,9 @@ export async function POST(request: Request) {
         email: email.toLowerCase().trim(),
         phone: phone || null,
         address: address || null,
+        gstin: gstin ? gstin.toUpperCase().trim() : null,
+        state: state || null,
+        stateCode: stateCode || null,
       },
     });
 

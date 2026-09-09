@@ -8,11 +8,10 @@ import {
   Calendar,
   Building,
   FileText,
-  DollarSign,
-  Search,
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { PaymentModal } from '@/components/PaymentModal';
+import { formatINR } from '@/lib/formatters';
 
 interface Payment {
   id: string;
@@ -80,8 +79,8 @@ export default function PaymentsPage() {
   return (
     <>
       <Navbar
-        title="Payment Receipts Log"
-        subtitle="Track payment history, payment methods, and transaction receipts"
+        title="Payment Receipts Log (INR ₹)"
+        subtitle="Track Indian payment history, UPI / NEFT transaction receipts, and UTR numbers"
         searchValue={search}
         onSearchChange={setSearch}
       />
@@ -93,7 +92,7 @@ export default function PaymentsPage() {
               <CreditCard className="w-6 h-6 text-emerald-400" />
               <span>Payments Log ({filteredPayments.length})</span>
             </h1>
-            <p className="text-xs text-slate-400">Total Revenue Collected: <strong className="text-emerald-400">${totalCollected.toFixed(2)}</strong></p>
+            <p className="text-xs text-slate-400">Total Collected Revenue: <strong className="text-emerald-400 font-extrabold">{formatINR(totalCollected)}</strong></p>
           </div>
 
           <button
@@ -101,14 +100,14 @@ export default function PaymentsPage() {
             className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/30"
           >
             <Plus className="w-4 h-4" />
-            <span>Record Payment</span>
+            <span>Record Payment (INR ₹)</span>
           </button>
         </div>
 
         {/* Payments Table */}
         <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
           {loading ? (
-            <div className="py-16 text-center text-slate-500 text-xs">Loading payments log...</div>
+            <div className="py-16 text-center text-slate-500 text-xs">Loading payment receipts...</div>
           ) : filteredPayments.length === 0 ? (
             <div className="py-16 text-center text-slate-500 text-xs">
               {search ? 'No payments matching your search.' : 'No payment records found yet.'}
@@ -121,9 +120,9 @@ export default function PaymentsPage() {
                     <th className="py-3.5 px-6">Payment Date</th>
                     <th className="py-3.5 px-6">Invoice #</th>
                     <th className="py-3.5 px-6">Customer Name</th>
-                    <th className="py-3.5 px-6">Method</th>
-                    <th className="py-3.5 px-6">Notes / Memo</th>
-                    <th className="py-3.5 px-6 text-right">Amount Paid</th>
+                    <th className="py-3.5 px-6">Mode</th>
+                    <th className="py-3.5 px-6">UTR / Memo</th>
+                    <th className="py-3.5 px-6 text-right">Amount Received</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -136,7 +135,7 @@ export default function PaymentsPage() {
                         </div>
                       </td>
 
-                      <td className="py-4 px-6 font-bold text-slate-100">
+                      <td className="py-4 px-6 font-bold text-slate-100 font-mono">
                         <Link
                           href={`/dashboard/invoices/${p.invoice?.id}`}
                           className="hover:text-indigo-400 flex items-center gap-1.5 transition-colors"
@@ -159,12 +158,12 @@ export default function PaymentsPage() {
                         </span>
                       </td>
 
-                      <td className="py-4 px-6 text-slate-400 max-w-xs truncate">
-                        {p.notes || <span className="text-slate-600 font-mono">—</span>}
+                      <td className="py-4 px-6 text-slate-400 max-w-xs truncate font-mono text-[11px]">
+                        {p.notes || <span className="text-slate-600">—</span>}
                       </td>
 
                       <td className="py-4 px-6 text-right">
-                        <span className="font-extrabold text-emerald-400 text-sm">+${p.amount.toFixed(2)}</span>
+                        <span className="font-extrabold text-emerald-400 text-sm">+{formatINR(p.amount)}</span>
                       </td>
                     </tr>
                   ))}

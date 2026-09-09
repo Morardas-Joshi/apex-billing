@@ -36,7 +36,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { name, email, phone, address } = body;
+    const { name, email, phone, address, gstin, state, stateCode } = body;
 
     if (!name || !email) {
       return NextResponse.json({ error: 'Name and email are required' }, { status: 400 });
@@ -49,6 +49,9 @@ export async function PUT(
         email: email.toLowerCase().trim(),
         phone: phone || null,
         address: address || null,
+        gstin: gstin ? gstin.toUpperCase().trim() : null,
+        state: state || null,
+        stateCode: stateCode || null,
       },
     });
 

@@ -11,7 +11,7 @@ export async function downloadInvoicePDF(elementId: string, filename: string) {
     scale: 2,
     useCORS: true,
     logging: false,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#ffffff',
   });
 
   const imgData = canvas.toDataURL('image/png');

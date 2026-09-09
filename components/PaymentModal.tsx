@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, CreditCard, DollarSign, Calendar, FileText, Loader2 } from 'lucide-react';
+import { X, CreditCard, Calendar, FileText, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatINR } from '@/lib/formatters';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -26,7 +27,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 }) => {
   const [invoiceId, setInvoiceId] = useState(defaultInvoiceId || '');
   const [amount, setAmount] = useState('');
-  const [method, setMethod] = useState('Bank Transfer');
+  const [method, setMethod] = useState('UPI / QR');
   const [notes, setNotes] = useState('');
   const [paidAt, setPaidAt] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
@@ -104,7 +105,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <div className="flex items-center justify-between p-6 border-b border-slate-800">
             <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-emerald-400" />
-              <span>Record Payment</span>
+              <span>Record Payment (INR ₹)</span>
             </h3>
             <button
               onClick={onClose}
@@ -139,7 +140,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   ) : (
                     invoices.map((inv) => (
                       <option key={inv.id} value={inv.id} className="bg-slate-900 text-slate-100">
-                        {inv.invoiceNumber} — {inv.customer?.name} (${inv.total.toFixed(2)})
+                        {inv.invoiceNumber} — {inv.customer?.name} ({formatINR(inv.total)})
                       </option>
                     ))
                   )}
@@ -149,10 +150,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
-                Payment Amount ($) *
+                Payment Amount (₹ INR) *
               </label>
               <div className="relative">
-                <DollarSign className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <span className="text-slate-400 font-bold absolute left-3.5 top-1/2 -translate-y-1/2 text-sm">₹</span>
                 <input
                   type="number"
                   step="0.01"
@@ -161,7 +162,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 font-bold"
                 />
               </div>
             </div>
@@ -169,18 +170,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
-                  Payment Method
+                  Payment Mode
                 </label>
                 <select
                   value={method}
                   onChange={(e) => setMethod(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 bg-slate-900"
                 >
-                  <option value="Bank Transfer">Bank Transfer (ACH)</option>
-                  <option value="Credit Card">Credit Card</option>
+                  <option value="UPI / QR">UPI / QR Code (GPay / PhonePe / Paytm)</option>
+                  <option value="NEFT/RTGS">NEFT / RTGS / IMPS</option>
+                  <option value="Net Banking">Net Banking</option>
                   <option value="Cash">Cash</option>
-                  <option value="PayPal">PayPal</option>
-                  <option value="Check">Check</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="Credit/Debit Card">Credit / Debit Card</option>
                 </select>
               </div>
 
@@ -201,11 +203,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
-                Notes / Reference Number
+                UTR / Reference No / Memo
               </label>
               <textarea
                 rows={2}
-                placeholder="e.g. Transaction ID, Check #, Memo..."
+                placeholder="e.g. UTR Ref HDFCN26223019842, UPI Ref ID..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500"

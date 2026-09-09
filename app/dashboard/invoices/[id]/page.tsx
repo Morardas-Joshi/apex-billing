@@ -5,22 +5,20 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
-  Printer,
   Download,
   CreditCard,
   Building,
-  Calendar,
   CheckCircle2,
   Send,
   Trash2,
-  Clock,
-  AlertTriangle,
   Zap,
+  FileCheck,
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PaymentModal } from '@/components/PaymentModal';
 import { downloadInvoicePDF } from '@/lib/pdf';
+import { formatINR } from '@/lib/formatters';
 
 interface InvoiceDetail {
   id: string;
@@ -31,6 +29,11 @@ interface InvoiceDetail {
   subtotal: number;
   taxRate: number;
   tax: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  isInterState: boolean;
+  placeOfSupply?: string | null;
   total: number;
   notes?: string | null;
   customer: {
@@ -39,10 +42,14 @@ interface InvoiceDetail {
     email: string;
     phone?: string | null;
     address?: string | null;
+    gstin?: string | null;
+    state?: string | null;
+    stateCode?: string | null;
   };
   items: Array<{
     id: string;
     description: string;
+    hsnSac?: string | null;
     quantity: number;
     unitPrice: number;
     amount: number;
@@ -135,8 +142,8 @@ export default function InvoiceDetailPage() {
   if (loading) {
     return (
       <>
-        <Navbar title="Invoice Details" />
-        <div className="p-16 text-center text-slate-500 text-xs flex-1">Loading invoice details...</div>
+        <Navbar title="Tax Invoice Details" />
+        <div className="p-16 text-center text-slate-500 text-xs flex-1">Loading GST tax invoice details...</div>
       </>
     );
   }
@@ -145,7 +152,7 @@ export default function InvoiceDetailPage() {
     return (
       <>
         <Navbar title="Invoice Not Found" />
-        <div className="p-16 text-center text-rose-400 text-xs flex-1">Invoice could not be loaded.</div>
+        <div className="p-16 text-center text-rose-400 text-xs flex-1">Tax Invoice could not be loaded.</div>
       </>
     );
   }
@@ -155,7 +162,7 @@ export default function InvoiceDetailPage() {
 
   return (
     <>
-      <Navbar title={`Invoice ${invoice.invoiceNumber}`} subtitle="Official customer invoice statement and settlement details" />
+      <Navbar title={`Tax Invoice ${invoice.invoiceNumber}`} subtitle="Official Indian GST Tax Invoice Statement" />
 
       <main className="p-8 space-y-6 flex-1 overflow-y-auto max-w-5xl">
         {/* Navigation & Controls */}
@@ -169,14 +176,13 @@ export default function InvoiceDetailPage() {
           </Link>
 
           <div className="flex flex-wrap items-center gap-3">
-            {/* Status Quick Action Toggles */}
             {invoice.status === 'DRAFT' && (
               <button
                 onClick={() => handleStatusChange('SENT')}
                 className="px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold flex items-center gap-1.5 hover:bg-amber-500/20 transition-all"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Mark as Sent</span>
+                <span>Mark as Issued</span>
               </button>
             )}
 
@@ -186,7 +192,7 @@ export default function InvoiceDetailPage() {
                 className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-emerald-600/30"
               >
                 <CreditCard className="w-3.5 h-3.5" />
-                <span>Record Payment</span>
+                <span>Record Payment (INR ₹)</span>
               </button>
             )}
 
@@ -196,7 +202,7 @@ export default function InvoiceDetailPage() {
               className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/30 disabled:opacity-50"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>{downloading ? 'Generating PDF...' : 'Download PDF'}</span>
+              <span>{downloading ? 'Generating PDF...' : 'Download GST PDF'}</span>
             </button>
 
             <button
@@ -209,31 +215,42 @@ export default function InvoiceDetailPage() {
           </div>
         </div>
 
-        {/* PRINTABLE INVOICE CARD CONTAINER */}
+        {/* PRINTABLE OFFICIAL GST TAX INVOICE */}
         <div id="invoice-printable-card" className="glass-panel rounded-3xl p-8 border border-slate-800 space-y-8 bg-slate-900/90 text-slate-100 shadow-2xl">
           {/* Header Branding & Invoice # */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 pb-6 border-b border-slate-800">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">
-                  <Zap className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold">
+                  <Zap className="w-5 h-5" />
                 </div>
-                <span className="text-xl font-bold tracking-tight text-white">Apex Billing</span>
+                <div>
+                  <span className="text-xl font-bold tracking-tight text-white block">Apex Infotech India Pvt Ltd</span>
+                  <span className="text-[10px] text-indigo-400 uppercase tracking-widest font-semibold">TAX INVOICE (ORIGINAL FOR RECIPIENT)</span>
+                </div>
               </div>
-              <p className="text-xs text-slate-400">100 Technology Plaza, San Francisco, CA 94107</p>
-              <p className="text-xs text-slate-400">support@apexbilling.io | +1 (800) 555-0199</p>
+              <p className="text-xs text-slate-300">Plot 100, Bandra Kurla Complex, Bandra East, Mumbai, MH 400051</p>
+              <p className="text-xs text-slate-400">Email: billing@apexinfotech.in | Phone: +91 (022) 6700-1999</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-mono font-bold">
+                <FileCheck className="w-3.5 h-3.5 text-indigo-400" />
+                <span>GSTIN: 27AAAAA0000A1Z5</span>
+                <span className="text-slate-400 font-normal">| State: 27-Maharashtra</span>
+              </div>
             </div>
 
             <div className="sm:text-right">
               <div className="inline-block mb-2">
                 <StatusBadge status={invoice.status} size="lg" />
               </div>
-              <h1 className="text-2xl font-extrabold text-white tracking-tight">{invoice.invoiceNumber}</h1>
-              <p className="text-xs text-slate-400 mt-1">
-                Issued: {new Date(invoice.issueDate).toLocaleDateString()}
+              <h1 className="text-2xl font-extrabold text-white tracking-tight font-mono">{invoice.invoiceNumber}</h1>
+              <p className="text-xs text-slate-300 mt-1">
+                Invoice Date: <strong className="text-white">{new Date(invoice.issueDate).toLocaleDateString()}</strong>
               </p>
               <p className="text-xs font-semibold text-indigo-400">
-                Due Date: {new Date(invoice.dueDate).toLocaleDateString()}
+                Payment Due: {new Date(invoice.dueDate).toLocaleDateString()}
+              </p>
+              <p className="text-xs text-slate-400 mt-1 font-mono">
+                Place of Supply: <strong className="text-slate-200">{invoice.placeOfSupply || '27-Maharashtra'}</strong>
               </p>
             </div>
           </div>
@@ -241,8 +258,15 @@ export default function InvoiceDetailPage() {
           {/* Billed To Client Card */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-950/60 p-6 rounded-2xl border border-slate-800">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Billed To (Client)</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Billed To (B2B / Client)</p>
               <h3 className="text-base font-extrabold text-slate-100">{invoice.customer.name}</h3>
+              {invoice.customer.gstin ? (
+                <p className="text-xs text-indigo-400 font-mono font-bold my-1">
+                  GSTIN: {invoice.customer.gstin} {invoice.customer.stateCode ? `(State Code: ${invoice.customer.stateCode})` : ''}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-400 font-mono">GSTIN: Unregistered Consumer</p>
+              )}
               <p className="text-xs text-slate-300 mt-0.5">{invoice.customer.email}</p>
               {invoice.customer.phone && <p className="text-xs text-slate-400">{invoice.customer.phone}</p>}
               {invoice.customer.address && <p className="text-xs text-slate-400 mt-2 max-w-xs">{invoice.customer.address}</p>}
@@ -250,45 +274,47 @@ export default function InvoiceDetailPage() {
 
             <div className="md:text-right flex flex-col justify-between">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Invoice Total</p>
-                <p className="text-3xl font-extrabold text-indigo-400">${invoice.total.toFixed(2)}</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Grand Total (Incl. GST)</p>
+                <p className="text-3xl font-extrabold text-emerald-400">{formatINR(invoice.total)}</p>
               </div>
 
               <div className="mt-4 pt-4 border-t border-slate-800 text-xs">
                 <div className="flex justify-between md:justify-end gap-4 text-slate-300">
-                  <span>Paid to date:</span>
-                  <strong className="text-emerald-400">${totalPaid.toFixed(2)}</strong>
+                  <span>Paid Received:</span>
+                  <strong className="text-emerald-400">{formatINR(totalPaid)}</strong>
                 </div>
                 <div className="flex justify-between md:justify-end gap-4 text-slate-200 font-bold mt-1">
-                  <span>Balance Due:</span>
+                  <span>Balance Amount Payable:</span>
                   <strong className={balanceDue > 0 ? 'text-amber-400' : 'text-slate-400'}>
-                    ${balanceDue.toFixed(2)}
+                    {formatINR(balanceDue)}
                   </strong>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Line Items Table */}
+          {/* Line Items Table with HSN/SAC Column */}
           <div>
-            <h3 className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider">Services & Deliverables</h3>
+            <h3 className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider">Goods & Services Particulars</h3>
             <div className="overflow-x-auto rounded-xl border border-slate-800">
               <table className="w-full text-left text-xs text-slate-300">
                 <thead className="text-[11px] uppercase tracking-wider text-slate-400 bg-slate-950/80 border-b border-slate-800">
                   <tr>
                     <th className="py-3.5 px-4">Item Description</th>
+                    <th className="py-3.5 px-4 font-mono">HSN / SAC</th>
                     <th className="py-3.5 px-4 text-center">Qty</th>
-                    <th className="py-3.5 px-4 text-right">Unit Price</th>
-                    <th className="py-3.5 px-4 text-right">Amount</th>
+                    <th className="py-3.5 px-4 text-right">Unit Rate (₹)</th>
+                    <th className="py-3.5 px-4 text-right">Taxable Value (₹)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
                   {invoice.items.map((item) => (
                     <tr key={item.id}>
                       <td className="py-3.5 px-4 font-semibold text-slate-200">{item.description}</td>
+                      <td className="py-3.5 px-4 font-mono text-indigo-300">{item.hsnSac || '998311'}</td>
                       <td className="py-3.5 px-4 text-center text-slate-300">{item.quantity}</td>
-                      <td className="py-3.5 px-4 text-right text-slate-300">${item.unitPrice.toFixed(2)}</td>
-                      <td className="py-3.5 px-4 text-right font-bold text-slate-100">${item.amount.toFixed(2)}</td>
+                      <td className="py-3.5 px-4 text-right text-slate-300">{formatINR(item.unitPrice)}</td>
+                      <td className="py-3.5 px-4 text-right font-bold text-slate-100">{formatINR(item.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -296,12 +322,12 @@ export default function InvoiceDetailPage() {
             </div>
           </div>
 
-          {/* Calculation Summary Footer */}
+          {/* GST Tax Calculation Summary Footer */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
             <div>
               {invoice.notes && (
                 <div>
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Notes & Terms</h4>
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Payment Instructions & Terms</h4>
                   <p className="text-xs text-slate-400 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
                     {invoice.notes}
                   </p>
@@ -311,33 +337,53 @@ export default function InvoiceDetailPage() {
 
             <div className="space-y-2 text-xs bg-slate-950/60 p-4 rounded-xl border border-slate-800">
               <div className="flex justify-between text-slate-400">
-                <span>Subtotal:</span>
-                <span className="font-semibold text-slate-200">${invoice.subtotal.toFixed(2)}</span>
+                <span>Total Taxable Subtotal:</span>
+                <span className="font-semibold text-slate-200">{formatINR(invoice.subtotal)}</span>
               </div>
-              <div className="flex justify-between text-slate-400">
-                <span>Tax ({invoice.taxRate}%):</span>
-                <span className="font-semibold text-slate-200">${invoice.tax.toFixed(2)}</span>
+
+              {!invoice.isInterState ? (
+                <>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Central GST (CGST {invoice.taxRate / 2}%):</span>
+                    <span className="font-semibold text-slate-200">{formatINR(invoice.cgst || invoice.tax / 2)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>State GST (SGST {invoice.taxRate / 2}%):</span>
+                    <span className="font-semibold text-slate-200">{formatINR(invoice.sgst || invoice.tax / 2)}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between text-purple-400">
+                  <span>Integrated GST (IGST {invoice.taxRate}%):</span>
+                  <span className="font-semibold">{formatINR(invoice.igst || invoice.tax)}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between text-indigo-300 font-semibold pt-1 border-t border-slate-800/60">
+                <span>Total GST Amount ({invoice.taxRate}%):</span>
+                <span>{formatINR(invoice.tax)}</span>
               </div>
+
               <div className="pt-2 border-t border-slate-800 flex justify-between font-extrabold text-sm text-white">
-                <span>Total Amount:</span>
-                <span className="text-indigo-400">${invoice.total.toFixed(2)}</span>
+                <span>Grand Total (INR ₹):</span>
+                <span className="text-emerald-400 text-base">{formatINR(invoice.total)}</span>
               </div>
             </div>
           </div>
 
-          {/* Payment History Log */}
+          {/* Payment Receipts Log */}
           {invoice.payments.length > 0 && (
             <div className="pt-6 border-t border-slate-800">
-              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">Payment Receipts</h4>
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">Settlement & Payment Receipts</h4>
               <div className="space-y-2">
                 {invoice.payments.map((p) => (
                   <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
                     <div className="flex items-center gap-2 text-emerald-400 font-semibold">
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>{p.method} Payment</span>
+                      <span>{p.method} Received</span>
                       <span className="text-slate-400 font-normal">on {new Date(p.paidAt).toLocaleDateString()}</span>
                     </div>
-                    <span className="font-bold text-emerald-400 text-sm">+${p.amount.toFixed(2)}</span>
+                    <span className="font-bold text-emerald-400 text-sm">+{formatINR(p.amount)}</span>
                   </div>
                 ))}
               </div>
