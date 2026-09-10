@@ -85,19 +85,19 @@ export default function PaymentsPage() {
         onSearchChange={setSearch}
       />
 
-      <main className="p-8 space-y-6 flex-1 overflow-y-auto">
+      <main className="p-8 space-y-6 flex-1 overflow-y-auto bg-slate-50">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
-              <CreditCard className="w-6 h-6 text-emerald-400" />
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+              <CreditCard className="w-6 h-6 text-emerald-600" />
               <span>Payments Log ({filteredPayments.length})</span>
             </h1>
-            <p className="text-xs text-slate-400">Total Collected Revenue: <strong className="text-emerald-400 font-extrabold">{formatINR(totalCollected)}</strong></p>
+            <p className="text-xs text-slate-600 mt-1 font-medium">Total Collected Revenue: <strong className="text-emerald-700 font-extrabold">{formatINR(totalCollected)}</strong></p>
           </div>
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/30"
+            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-md"
           >
             <Plus className="w-4 h-4" />
             <span>Record Payment (INR ₹)</span>
@@ -105,17 +105,17 @@ export default function PaymentsPage() {
         </div>
 
         {/* Payments Table */}
-        <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {loading ? (
-            <div className="py-16 text-center text-slate-500 text-xs">Loading payment receipts...</div>
+            <div className="py-16 text-center text-slate-600 font-medium text-xs">Loading payment receipts...</div>
           ) : filteredPayments.length === 0 ? (
-            <div className="py-16 text-center text-slate-500 text-xs">
+            <div className="py-16 text-center text-slate-600 font-medium text-xs">
               {search ? 'No payments matching your search.' : 'No payment records found yet.'}
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="text-[11px] uppercase tracking-wider text-slate-400 bg-slate-900/80 border-b border-slate-800">
+              <table className="w-full text-left text-xs text-slate-800">
+                <thead className="text-[11px] uppercase tracking-wider text-slate-700 bg-slate-100 border-b border-slate-200 font-extrabold">
                   <tr>
                     <th className="py-3.5 px-6">Payment Date</th>
                     <th className="py-3.5 px-6">Invoice #</th>
@@ -125,27 +125,27 @@ export default function PaymentsPage() {
                     <th className="py-3.5 px-6 text-right">Amount Received</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-200">
                   {filteredPayments.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="py-4 px-6 font-medium text-slate-300">
+                    <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-4 px-6 font-semibold text-slate-700">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-3.5 h-3.5 text-slate-400" />
                           <span>{new Date(p.paidAt).toLocaleDateString()}</span>
                         </div>
                       </td>
 
-                      <td className="py-4 px-6 font-bold text-slate-100 font-mono">
+                      <td className="py-4 px-6 font-bold text-blue-600 font-mono">
                         <Link
                           href={`/dashboard/invoices/${p.invoice?.id}`}
-                          className="hover:text-indigo-400 flex items-center gap-1.5 transition-colors"
+                          className="hover:text-blue-800 flex items-center gap-1.5 transition-colors"
                         >
-                          <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                          <FileText className="w-3.5 h-3.5 text-blue-600" />
                           <span>{p.invoice?.invoiceNumber}</span>
                         </Link>
                       </td>
 
-                      <td className="py-4 px-6 font-semibold text-slate-200">
+                      <td className="py-4 px-6 font-bold text-slate-900">
                         <div className="flex items-center gap-2">
                           <Building className="w-3.5 h-3.5 text-slate-400" />
                           <span>{p.invoice?.customer?.name}</span>
@@ -153,17 +153,17 @@ export default function PaymentsPage() {
                       </td>
 
                       <td className="py-4 px-6">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium text-[11px]">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-bold text-[11px]">
                           {p.method}
                         </span>
                       </td>
 
-                      <td className="py-4 px-6 text-slate-400 max-w-xs truncate font-mono text-[11px]">
-                        {p.notes || <span className="text-slate-600">—</span>}
+                      <td className="py-4 px-6 text-slate-600 max-w-xs truncate font-mono text-[11px] font-medium">
+                        {p.notes || <span className="text-slate-400">—</span>}
                       </td>
 
                       <td className="py-4 px-6 text-right">
-                        <span className="font-extrabold text-emerald-400 text-sm">+{formatINR(p.amount)}</span>
+                        <span className="font-extrabold text-emerald-700 text-sm">+{formatINR(p.amount)}</span>
                       </td>
                     </tr>
                   ))}

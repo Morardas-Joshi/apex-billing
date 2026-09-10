@@ -47,7 +47,7 @@ export default function CreateInvoicePage() {
   // GST State Parameters
   const [taxRate, setTaxRate] = useState<number>(18);
   const [isInterState, setIsInterState] = useState<boolean>(false);
-  const [placeOfSupply, setPlaceOfSupply] = useState<string>('27-Maharashtra');
+  const [placeOfSupply, setPlaceOfSupply] = useState<string>('24-Gujarat');
   const [notes, setNotes] = useState('GST Tax Invoice. Terms: 18% GST Applicable. Payment via UPI / Bank Transfer.');
   const [status, setStatus] = useState<'DRAFT' | 'SENT'>('SENT');
   const [loading, setLoading] = useState(false);
@@ -77,12 +77,12 @@ export default function CreateInvoicePage() {
   }, []);
 
   const checkInterState = (cust: Customer) => {
-    if (cust.stateCode && cust.stateCode !== '27') {
+    if (cust.stateCode && cust.stateCode !== '24') {
       setIsInterState(true);
       setPlaceOfSupply(`${cust.stateCode}-${cust.state || 'Other State'}`);
     } else {
       setIsInterState(false);
-      setPlaceOfSupply('27-Maharashtra');
+      setPlaceOfSupply('24-Gujarat');
     }
   };
 
@@ -172,11 +172,11 @@ export default function CreateInvoicePage() {
     <>
       <Navbar title="Create GST Tax Invoice" subtitle="Generate a GST compliant tax invoice with CGST, SGST, IGST, and HSN/SAC codes" />
 
-      <main className="p-8 space-y-6 flex-1 overflow-y-auto max-w-5xl">
+      <main className="p-8 space-y-6 flex-1 overflow-y-auto max-w-5xl bg-slate-50">
         <div className="flex items-center justify-between">
           <Link
             href="/dashboard/invoices"
-            className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1.5 transition-colors font-medium"
+            className="text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-colors font-bold"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Invoices</span>
@@ -185,23 +185,23 @@ export default function CreateInvoicePage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium">
+            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold">
               {error}
             </div>
           )}
 
           {/* Customer & GST Parameters Card */}
-          <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                <Building className="w-5 h-5 text-indigo-400" />
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+              <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <Building className="w-5 h-5 text-blue-600" />
                 <span>GST Tax Invoice Details</span>
               </h2>
 
               <button
                 type="button"
                 onClick={() => setIsCustomerModalOpen(true)}
-                className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 hover:underline"
+                className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add New GST Customer</span>
@@ -210,13 +210,13 @@ export default function CreateInvoicePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-extrabold text-slate-700 mb-2 uppercase tracking-wider">
                   Select Customer *
                 </label>
                 <select
                   value={customerId}
                   onChange={(e) => handleCustomerSelect(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 bg-slate-900"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 font-bold focus:outline-none focus:border-blue-600"
                 >
                   {customers.length === 0 ? (
                     <option value="">No customers found. Add one!</option>
@@ -231,7 +231,7 @@ export default function CreateInvoicePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-extrabold text-slate-700 mb-2 uppercase tracking-wider">
                   Issue Date *
                 </label>
                 <input
@@ -239,12 +239,12 @@ export default function CreateInvoicePage() {
                   required
                   value={issueDate}
                   onChange={(e) => setIssueDate(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 font-semibold focus:outline-none focus:border-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-extrabold text-slate-700 mb-2 uppercase tracking-wider">
                   Payment Due Date *
                 </label>
                 <input
@@ -252,21 +252,21 @@ export default function CreateInvoicePage() {
                   required
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 font-semibold focus:outline-none focus:border-blue-600"
                 />
               </div>
             </div>
 
             {/* GST Tax Type & Place of Supply */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-800/80">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-200">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-extrabold text-slate-700 mb-2 uppercase tracking-wider">
                   GST Rate %
                 </label>
                 <select
                   value={taxRate}
                   onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 bg-slate-900 font-bold"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 font-bold focus:outline-none focus:border-blue-600"
                 >
                   <option value={18}>18% GST (Standard Services/Goods)</option>
                   <option value={12}>12% GST</option>
@@ -277,13 +277,13 @@ export default function CreateInvoicePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-extrabold text-slate-700 mb-2 uppercase tracking-wider">
                   Supply Type
                 </label>
                 <select
                   value={isInterState ? 'INTER' : 'INTRA'}
                   onChange={(e) => setIsInterState(e.target.value === 'INTER')}
-                  className="w-full px-3 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 bg-slate-900 font-semibold"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 font-bold focus:outline-none focus:border-blue-600"
                 >
                   <option value="INTRA">Intra-State (CGST {taxRate / 2}% + SGST {taxRate / 2}%)</option>
                   <option value="INTER">Inter-State (IGST {taxRate}%)</option>
@@ -291,13 +291,13 @@ export default function CreateInvoicePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-extrabold text-slate-700 mb-2 uppercase tracking-wider">
                   Place of Supply (State)
                 </label>
                 <select
                   value={placeOfSupply}
                   onChange={(e) => setPlaceOfSupply(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 bg-slate-900"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 font-semibold focus:outline-none focus:border-blue-600"
                 >
                   {INDIAN_STATES.map((s) => (
                     <option key={s.code} value={`${s.code}-${s.name}`}>
@@ -310,17 +310,17 @@ export default function CreateInvoicePage() {
           </div>
 
           {/* Dynamic Line Items Section with HSN/SAC */}
-          <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-400" />
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+              <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-600" />
                 <span>Goods / Services Items</span>
               </h2>
 
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/20 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold flex items-center gap-1.5 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Item</span>
@@ -328,7 +328,7 @@ export default function CreateInvoicePage() {
             </div>
 
             <div className="space-y-3">
-              <div className="grid grid-cols-12 gap-3 text-[11px] uppercase tracking-wider font-semibold text-slate-400 px-2">
+              <div className="grid grid-cols-12 gap-3 text-[11px] uppercase tracking-wider font-extrabold text-slate-700 px-2">
                 <div className="col-span-5">Description</div>
                 <div className="col-span-2">HSN/SAC Code</div>
                 <div className="col-span-1 text-center">Qty</div>
@@ -340,14 +340,14 @@ export default function CreateInvoicePage() {
                 const itemAmount = item.quantity * item.unitPrice;
 
                 return (
-                  <div key={index} className="grid grid-cols-12 gap-3 items-center p-2 rounded-xl bg-slate-900/60 border border-slate-800">
+                  <div key={index} className="grid grid-cols-12 gap-3 items-center p-3 rounded-xl bg-slate-50 border border-slate-200">
                     <div className="col-span-5">
                       <input
                         type="text"
                         placeholder="Service or product description..."
                         value={item.description}
                         onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg glass-input text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-900 font-semibold focus:outline-none focus:border-blue-600"
                       />
                     </div>
 
@@ -357,7 +357,7 @@ export default function CreateInvoicePage() {
                         placeholder="e.g. 998311"
                         value={item.hsnSac}
                         onChange={(e) => handleItemChange(index, 'hsnSac', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg glass-input text-xs font-mono text-slate-100 focus:outline-none focus:border-indigo-500 uppercase"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs font-mono text-slate-900 font-bold focus:outline-none focus:border-blue-600 uppercase"
                       />
                     </div>
 
@@ -367,7 +367,7 @@ export default function CreateInvoicePage() {
                         min="1"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                        className="w-full px-2 py-2 rounded-lg glass-input text-xs text-slate-100 text-center focus:outline-none focus:border-indigo-500"
+                        className="w-full px-2 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-900 font-bold text-center focus:outline-none focus:border-blue-600"
                       />
                     </div>
 
@@ -378,17 +378,17 @@ export default function CreateInvoicePage() {
                         min="0"
                         value={item.unitPrice}
                         onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg glass-input text-xs text-slate-100 text-right focus:outline-none focus:border-indigo-500 font-semibold"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs text-slate-900 text-right focus:outline-none focus:border-blue-600 font-bold"
                       />
                     </div>
 
                     <div className="col-span-2 flex items-center justify-end gap-2">
-                      <span className="font-bold text-slate-100 text-xs">{formatINR(itemAmount)}</span>
+                      <span className="font-extrabold text-slate-900 text-xs">{formatINR(itemAmount)}</span>
                       {items.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(index)}
-                          className="p-1 rounded-md text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                          className="p-1 rounded-md text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -400,9 +400,9 @@ export default function CreateInvoicePage() {
             </div>
 
             {/* GST Tax Calculation Breakdown Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-800">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-extrabold text-slate-700 mb-2 uppercase tracking-wider">
                   Terms & Conditions / Bank Details
                 </label>
                 <textarea
@@ -410,42 +410,42 @@ export default function CreateInvoicePage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="UPI ID, Bank Account details, Terms..."
-                  className="w-full p-3 rounded-xl glass-input text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
+                  className="w-full p-3 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:border-blue-600"
                 />
               </div>
 
-              <div className="space-y-2.5 bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-xs">
-                <div className="flex items-center justify-between text-slate-300">
+              <div className="space-y-2.5 bg-slate-50 p-5 rounded-2xl border border-slate-200 text-xs">
+                <div className="flex items-center justify-between text-slate-700 font-semibold">
                   <span>Taxable Amount (Subtotal)</span>
-                  <span className="font-bold text-slate-100">{formatINR(subtotal)}</span>
+                  <span className="font-extrabold text-slate-900">{formatINR(subtotal)}</span>
                 </div>
 
                 {!isInterState ? (
                   <>
-                    <div className="flex items-center justify-between text-slate-400">
+                    <div className="flex items-center justify-between text-slate-600 font-medium">
                       <span>Central GST (CGST {taxRate / 2}%)</span>
-                      <span className="font-semibold text-slate-200">{formatINR(cgst)}</span>
+                      <span className="font-bold text-slate-900">{formatINR(cgst)}</span>
                     </div>
-                    <div className="flex items-center justify-between text-slate-400">
+                    <div className="flex items-center justify-between text-slate-600 font-medium">
                       <span>State GST (SGST {taxRate / 2}%)</span>
-                      <span className="font-semibold text-slate-200">{formatINR(sgst)}</span>
+                      <span className="font-bold text-slate-900">{formatINR(sgst)}</span>
                     </div>
                   </>
                 ) : (
-                  <div className="flex items-center justify-between text-purple-400">
+                  <div className="flex items-center justify-between text-purple-800 font-bold">
                     <span>Integrated GST (IGST {taxRate}%)</span>
-                    <span className="font-semibold">{formatINR(igst)}</span>
+                    <span className="font-extrabold">{formatINR(igst)}</span>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between text-slate-300 pt-2 border-t border-slate-800/80">
+                <div className="flex items-center justify-between text-blue-700 font-bold pt-2 border-t border-slate-200">
                   <span>Total Tax Amount ({taxRate}%)</span>
-                  <span className="font-bold text-indigo-300">{formatINR(totalTaxAmount)}</span>
+                  <span className="font-extrabold text-blue-700">{formatINR(totalTaxAmount)}</span>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-base font-extrabold text-white">
+                <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-base font-extrabold text-slate-900">
                   <span>Grand Total Due (₹)</span>
-                  <span className="text-emerald-400 text-lg">{formatINR(total)}</span>
+                  <span className="text-emerald-700 text-lg">{formatINR(total)}</span>
                 </div>
               </div>
             </div>
@@ -454,11 +454,11 @@ export default function CreateInvoicePage() {
           {/* Form Actions */}
           <div className="flex items-center justify-between pt-4">
             <div className="flex items-center gap-3">
-              <label className="text-xs font-medium text-slate-400">Status:</label>
+              <label className="text-xs font-bold text-slate-700">Status:</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
-                className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none"
+                className="px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none"
               >
                 <option value="SENT">Issue Tax Invoice</option>
                 <option value="DRAFT">Save as Draft</option>
@@ -468,14 +468,14 @@ export default function CreateInvoicePage() {
             <div className="flex items-center gap-3">
               <Link
                 href="/dashboard/invoices"
-                className="px-4 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
+                className="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2 disabled:opacity-50"
+                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 <span>Generate GST Tax Invoice</span>

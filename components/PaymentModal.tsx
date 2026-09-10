@@ -95,21 +95,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden"
+          className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden"
         >
-          <div className="flex items-center justify-between p-6 border-b border-slate-800">
-            <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-emerald-400" />
+          <div className="flex items-center justify-between p-6 border-b border-slate-200">
+            <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-emerald-600" />
               <span>Record Payment (INR ₹)</span>
             </h3>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -117,13 +117,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {error && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-extrabold text-slate-700 mb-1.5 uppercase tracking-wider">
                 Select Invoice *
               </label>
               <div className="relative">
@@ -131,15 +131,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 <select
                   value={invoiceId}
                   onChange={(e) => handleInvoiceChange(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 appearance-none"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 font-bold focus:outline-none focus:border-blue-600 appearance-none"
                 >
                   {invoices.length === 0 ? (
-                    <option value="" className="bg-slate-900 text-slate-400">
+                    <option value="" className="bg-white text-slate-500 font-medium">
                       No unpaid invoices available
                     </option>
                   ) : (
                     invoices.map((inv) => (
-                      <option key={inv.id} value={inv.id} className="bg-slate-900 text-slate-100">
+                      <option key={inv.id} value={inv.id} className="bg-white text-slate-900 font-bold">
                         {inv.invoiceNumber} — {inv.customer?.name} ({formatINR(inv.total)})
                       </option>
                     ))
@@ -149,11 +149,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-extrabold text-slate-700 mb-1.5 uppercase tracking-wider">
                 Payment Amount (₹ INR) *
               </label>
               <div className="relative">
-                <span className="text-slate-400 font-bold absolute left-3.5 top-1/2 -translate-y-1/2 text-sm">₹</span>
+                <span className="text-slate-500 font-extrabold absolute left-3.5 top-1/2 -translate-y-1/2 text-sm">₹</span>
                 <input
                   type="number"
                   step="0.01"
@@ -162,20 +162,20 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 font-bold"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 font-extrabold focus:outline-none focus:border-blue-600"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                <label className="block text-xs font-extrabold text-slate-700 mb-1.5 uppercase tracking-wider">
                   Payment Mode
                 </label>
                 <select
                   value={method}
                   onChange={(e) => setMethod(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500 bg-slate-900"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 font-bold focus:outline-none focus:border-blue-600"
                 >
                   <option value="UPI / QR">UPI / QR Code (GPay / PhonePe / Paytm)</option>
                   <option value="NEFT/RTGS">NEFT / RTGS / IMPS</option>
@@ -187,7 +187,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+                <label className="block text-xs font-extrabold text-slate-700 mb-1.5 uppercase tracking-wider">
                   Payment Date
                 </label>
                 <div className="relative">
@@ -195,14 +195,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                     type="date"
                     value={paidAt}
                     onChange={(e) => setPaidAt(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 font-bold focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-extrabold text-slate-700 mb-1.5 uppercase tracking-wider">
                 UTR / Reference No / Memo
               </label>
               <textarea
@@ -210,22 +210,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 placeholder="e.g. UTR Ref HDFCN26223019842, UPI Ref ID..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-900 font-medium focus:outline-none focus:border-blue-600"
               />
             </div>
 
-            <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-800 mt-6">
+            <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-200 mt-6">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
+                className="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading || invoices.length === 0}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white shadow-lg shadow-emerald-600/30 flex items-center gap-2 disabled:opacity-50 transition-all"
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white shadow-md flex items-center gap-2 disabled:opacity-50 transition-all"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 <span>Record Payment</span>
