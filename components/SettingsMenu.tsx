@@ -50,6 +50,7 @@ export function SettingsMenu({ activeKey }: SettingsMenuProps) {
             <Link
               key={link.key}
               href={link.href}
+              prefetch={true}
               className={`settings-menu-link ${isActive ? 'active-settings-link' : ''}`}
             >
               <Icon size={16} />

@@ -212,6 +212,7 @@ export function Sidebar() {
               <div key={group.id} className="nav-group-wrapper">
                 <Link
                   href={item.href}
+                  prefetch={true}
                   className={`easy-nav-accordion-header ${isActive ? 'active-header' : ''}`}
                   title={isCollapsed ? item.name : undefined}
                 >
@@ -257,6 +258,7 @@ export function Sidebar() {
                       <Link
                         key={item.href}
                         href={item.href}
+                        prefetch={true}
                         className={`easy-nav-sublink ${isActive ? 'sublink-active' : ''}`}
                       >
                         <ItemIcon size={15} className="sublink-icon" />
