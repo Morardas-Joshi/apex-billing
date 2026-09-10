@@ -4,8 +4,8 @@ import './apex.css';
 import './invoice.css';
 
 export const metadata: Metadata = {
-  title: 'Apex Billing — Simple Serverless Billing & Invoicing',
-  description: 'Enterprise serverless billing and invoicing web app powered by Next.js and Neon Postgres',
+  title: 'EasyInvoice — Indian Bill & Sales Management',
+  description: 'Enterprise serverless GST billing and invoicing web app powered by Next.js and Neon Postgres',
 };
 
 export default function RootLayout({
@@ -14,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-indigo-500 selection:text-white">
+    <html lang="en">
+      <body className="bg-slate-50 text-slate-900 min-h-screen antialiased selection:bg-blue-600 selection:text-white">
         {children}
       </body>
     </html>

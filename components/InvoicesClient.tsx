@@ -17,6 +17,7 @@ import {
 import { Navbar } from '@/components/Navbar';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PaymentModal } from '@/components/PaymentModal';
+import { formatINR } from '@/lib/formatters';
 
 export interface Invoice {
   id: string;
@@ -124,37 +125,37 @@ export function InvoicesClient({ initialInvoices, initialTotal }: InvoicesClient
         onSearchChange={setSearch}
       />
 
-      <main className="p-8 space-y-6 flex-1 overflow-y-auto">
+      <main className="p-8 space-y-6 flex-1 overflow-y-auto bg-slate-50">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
-              <FileText className="w-6 h-6 text-indigo-400" />
-            <span>Invoices ({total})</span>
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+              <FileText className="w-6 h-6 text-blue-600" />
+              <span>Invoices ({total})</span>
             </h1>
-            <p className="text-xs text-slate-400">View and manage customer billing records</p>
+            <p className="text-xs text-slate-500 mt-1">View and manage customer billing records in INR (₹)</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Status Filter Dropdown */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs shadow-sm">
               <Filter className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-slate-400 font-medium">Status:</span>
+              <span className="text-slate-600 font-medium">Status:</span>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer"
+                className="bg-transparent text-slate-900 font-bold focus:outline-none cursor-pointer"
               >
-                <option value="ALL" className="bg-slate-900">All Statuses</option>
-                <option value="DRAFT" className="bg-slate-900">Draft</option>
-                <option value="SENT" className="bg-slate-900">Sent</option>
-                <option value="PAID" className="bg-slate-900">Paid</option>
-                <option value="OVERDUE" className="bg-slate-900">Overdue</option>
+                <option value="ALL">All Statuses</option>
+                <option value="DRAFT">Draft</option>
+                <option value="SENT">Sent</option>
+                <option value="PAID">Paid</option>
+                <option value="OVERDUE">Overdue</option>
               </select>
             </div>
 
             <Link
               href="/dashboard/invoices/create"
-              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/30"
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-md"
             >
               <Plus className="w-4 h-4" />
               <span>Create Invoice</span>
@@ -163,19 +164,19 @@ export function InvoicesClient({ initialInvoices, initialTotal }: InvoicesClient
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between text-xs text-slate-400">
+          <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Showing page {page} of {totalPages} ({total} invoices)</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => fetchInvoices(page - 1)}
                 disabled={page === 1 || loading}
-                className="p-2 rounded-lg border border-slate-800 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
                 aria-label="Previous page"
               ><ChevronLeft className="w-4 h-4" /></button>
               <button
                 onClick={() => fetchInvoices(page + 1)}
                 disabled={page === totalPages || loading}
-                className="p-2 rounded-lg border border-slate-800 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
                 aria-label="Next page"
               ><ChevronRight className="w-4 h-4" /></button>
             </div>
@@ -183,7 +184,7 @@ export function InvoicesClient({ initialInvoices, initialTotal }: InvoicesClient
         )}
 
         {/* Invoices List Table */}
-        <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {loading ? (
             <div className="py-16 text-center text-slate-500 text-xs">Loading invoice records...</div>
           ) : invoices.length === 0 ? (
@@ -194,8 +195,8 @@ export function InvoicesClient({ initialInvoices, initialTotal }: InvoicesClient
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="text-[11px] uppercase tracking-wider text-slate-400 bg-slate-900/80 border-b border-slate-800">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200 font-bold">
                   <tr>
                     <th className="py-3.5 px-6">Invoice #</th>
                     <th className="py-3.5 px-6">Customer</th>
@@ -205,40 +206,40 @@ export function InvoicesClient({ initialInvoices, initialTotal }: InvoicesClient
                     <th className="py-3.5 px-6 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-100">
                   {invoices.map((inv) => {
                     const totalPaid = inv.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
                     const balanceDue = Math.max(0, inv.total - totalPaid);
 
                     return (
-                      <tr key={inv.id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="py-4 px-6 font-bold text-slate-100">{inv.invoiceNumber}</td>
+                      <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-4 px-6 font-mono font-bold text-blue-600">{inv.invoiceNumber}</td>
 
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
-                            <Building className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                            <Building className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                             <div>
-                              <p className="font-semibold text-slate-200">{inv.customer?.name}</p>
-                              <p className="text-[10px] text-slate-400">{inv.customer?.email}</p>
+                              <p className="font-semibold text-slate-900">{inv.customer?.name}</p>
+                              <p className="text-[10px] text-slate-500">{inv.customer?.email}</p>
                             </div>
                           </div>
                         </td>
 
                         <td className="py-4 px-6">
-                          <div className="flex items-center gap-1.5 text-slate-300">
+                          <div className="flex items-center gap-1.5 text-slate-600">
                             <Calendar className="w-3.5 h-3.5 text-slate-400" />
                             <span>
                               {new Date(inv.issueDate).toLocaleDateString()} &rarr;{' '}
-                              <strong className="text-slate-200">{new Date(inv.dueDate).toLocaleDateString()}</strong>
+                              <strong className="text-slate-800">{new Date(inv.dueDate).toLocaleDateString()}</strong>
                             </span>
                           </div>
                         </td>
 
                         <td className="py-4 px-6">
                           <div>
-                            <p className="font-extrabold text-slate-100 text-sm">${inv.total.toFixed(2)}</p>
+                            <p className="font-extrabold text-slate-900 text-sm">{formatINR(inv.total)}</p>
                             {inv.status !== 'PAID' && balanceDue > 0 && (
-                              <p className="text-[10px] text-amber-400 font-medium">Due: ${balanceDue.toFixed(2)}</p>
+                              <p className="text-[10px] text-amber-700 font-bold">Due: {formatINR(balanceDue)}</p>
                             )}
                           </div>
                         </td>
@@ -253,7 +254,7 @@ export function InvoicesClient({ initialInvoices, initialTotal }: InvoicesClient
                               <button
                                 onClick={() => handleRecordPayment(inv.id)}
                                 title="Record Payment"
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
                               >
                                 <CreditCard className="w-4 h-4" />
                               </button>
@@ -261,14 +262,14 @@ export function InvoicesClient({ initialInvoices, initialTotal }: InvoicesClient
                             <Link
                               href={`/dashboard/invoices/${inv.id}`}
                               title="View Details / Export PDF"
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                             >
                               <Eye className="w-4 h-4" />
                             </Link>
                             <button
                               onClick={() => handleDelete(inv.id, inv.invoiceNumber)}
                               title="Delete Invoice"
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>

@@ -85,34 +85,34 @@ export default function DashboardPage() {
     <>
       <Navbar title="Indian GST Dashboard" subtitle="Real-time GST metrics, outstanding balances, and recent tax invoices in INR (₹)" />
 
-      <main className="p-8 space-y-8 flex-1 overflow-y-auto">
+      <main className="p-8 space-y-8 flex-1 overflow-y-auto bg-slate-50">
         {/* Top Header Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 tracking-tight">Financial Overview (INR ₹)</h1>
-            <p className="text-xs text-slate-400">GST billing summary, active clients, and monthly cash flow</p>
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Financial Overview (INR ₹)</h1>
+            <p className="text-xs text-slate-500 mt-1">GST billing summary, active clients, and monthly cash flow</p>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={fetchStats}
               title="Refresh Data"
-              className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition-colors shadow-sm"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
 
             <button
               onClick={openPaymentModal}
-              className="px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-2 transition-all shadow-sm"
+              className="px-4 py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center gap-2 transition-all shadow-sm"
             >
-              <CreditCard className="w-4 h-4" />
+              <CreditCard className="w-4 h-4 text-emerald-600" />
               <span>Record Payment</span>
             </button>
 
             <Link
               href="/dashboard/invoices/create"
-              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/30"
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-md"
             >
               <Plus className="w-4 h-4" />
               <span>New GST Invoice</span>
@@ -155,17 +155,17 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Invoice Status Breakdown */}
+        {/* Invoice Status Breakdown & Table */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 glass-panel rounded-2xl p-6 border border-slate-800">
+          <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-base font-bold text-slate-100">Recent Tax Invoices</h3>
-                <p className="text-xs text-slate-400">Latest GST billing activity across clients</p>
+                <h3 className="text-base font-bold text-slate-900">Recent Tax Invoices</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Latest GST billing activity across clients</p>
               </div>
               <Link
                 href="/dashboard/invoices"
-                className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 hover:underline"
+                className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline"
               >
                 <span>View All</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -178,29 +178,29 @@ export default function DashboardPage() {
               <div className="py-12 text-center text-slate-500 text-xs">No invoices found. Create your first invoice!</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="text-[11px] uppercase tracking-wider text-slate-400 bg-slate-900/60 border-b border-slate-800">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200 font-bold">
                     <tr>
-                      <th className="py-3 px-4">Invoice #</th>
-                      <th className="py-3 px-4">Customer</th>
-                      <th className="py-3 px-4">Total Amount</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4 text-right">Action</th>
+                      <th className="py-3.5 px-4">Invoice #</th>
+                      <th className="py-3.5 px-4">Customer</th>
+                      <th className="py-3.5 px-4">Total Amount</th>
+                      <th className="py-3.5 px-4">Status</th>
+                      <th className="py-3.5 px-4 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-slate-100">
                     {stats.recentInvoices.map((inv) => (
-                      <tr key={inv.id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="py-3.5 px-4 font-semibold text-slate-100">{inv.invoiceNumber}</td>
-                        <td className="py-3.5 px-4 font-medium text-slate-200">{inv.customerName}</td>
-                        <td className="py-3.5 px-4 font-bold text-slate-100">{formatINR(inv.total)}</td>
+                      <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3.5 px-4 font-mono font-bold text-blue-600">{inv.invoiceNumber}</td>
+                        <td className="py-3.5 px-4 font-semibold text-slate-800">{inv.customerName}</td>
+                        <td className="py-3.5 px-4 font-extrabold text-slate-900">{formatINR(inv.total)}</td>
                         <td className="py-3.5 px-4">
                           <StatusBadge status={inv.status} size="sm" />
                         </td>
                         <td className="py-3.5 px-4 text-right">
                           <Link
                             href={`/dashboard/invoices/${inv.id}`}
-                            className="p-1.5 inline-flex items-center gap-1 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                            className="p-1.5 inline-flex items-center gap-1 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                           >
                             <Eye className="w-4 h-4" />
                           </Link>
@@ -214,38 +214,38 @@ export default function DashboardPage() {
           </div>
 
           {/* Status Breakdown Sidebar Card */}
-          <div className="glass-panel rounded-2xl p-6 border border-slate-800 flex flex-col justify-between">
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
             <div>
-              <h3 className="text-base font-bold text-slate-100 mb-1">Invoice Lifecycle Distribution</h3>
-              <p className="text-xs text-slate-400 mb-6">Current count by invoice status</p>
+              <h3 className="text-base font-bold text-slate-900 mb-1">Invoice Lifecycle Distribution</h3>
+              <p className="text-xs text-slate-500 mb-6">Current count by invoice status</p>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                   <StatusBadge status="DRAFT" />
-                  <span className="font-bold text-slate-200 text-sm">{stats?.statusCounts.DRAFT || 0}</span>
+                  <span className="font-bold text-slate-900 text-sm">{stats?.statusCounts.DRAFT || 0}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                   <StatusBadge status="SENT" />
-                  <span className="font-bold text-slate-200 text-sm">{stats?.statusCounts.SENT || 0}</span>
+                  <span className="font-bold text-slate-900 text-sm">{stats?.statusCounts.SENT || 0}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                   <StatusBadge status="PAID" />
-                  <span className="font-bold text-slate-200 text-sm">{stats?.statusCounts.PAID || 0}</span>
+                  <span className="font-bold text-slate-900 text-sm">{stats?.statusCounts.PAID || 0}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                   <StatusBadge status="OVERDUE" />
-                  <span className="font-bold text-slate-200 text-sm">{stats?.statusCounts.OVERDUE || 0}</span>
+                  <span className="font-bold text-slate-900 text-sm">{stats?.statusCounts.OVERDUE || 0}</span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 p-4 rounded-xl bg-indigo-600/10 border border-indigo-500/20 text-xs">
-              <p className="text-indigo-300 font-semibold mb-1">🇮🇳 GST Billing Tip</p>
-              <p className="text-slate-400">
-                Intra-State sales automatically apply <strong className="text-indigo-300">CGST (9%) + SGST (9%)</strong> while Inter-State sales apply <strong className="text-purple-300">IGST (18%)</strong>.
+            <div className="mt-8 p-4 rounded-xl bg-blue-50 border border-blue-100 text-xs">
+              <p className="text-blue-900 font-bold mb-1">🇮🇳 GST Billing Rules</p>
+              <p className="text-slate-600 leading-relaxed">
+                Intra-State sales apply <strong className="text-blue-700">CGST (9%) + SGST (9%)</strong> while Inter-State sales apply <strong className="text-indigo-700">IGST (18%)</strong>.
               </p>
             </div>
           </div>

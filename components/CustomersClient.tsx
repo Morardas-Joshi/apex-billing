@@ -104,19 +104,19 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
         onSearchChange={setSearch}
       />
 
-      <main className="p-8 space-y-6 flex-1 overflow-y-auto">
+      <main className="p-8 space-y-6 flex-1 overflow-y-auto bg-slate-50">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
-              <Users className="w-6 h-6 text-indigo-400" />
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+              <Users className="w-6 h-6 text-blue-600" />
               <span>Customers ({customers.length})</span>
             </h1>
-            <p className="text-xs text-slate-400">Registered GST business accounts</p>
+            <p className="text-xs text-slate-500 mt-1">Registered GST business accounts</p>
           </div>
 
           <button
             onClick={handleCreateNew}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/30 self-start sm:self-auto"
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-md self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Add GST Customer</span>
@@ -124,7 +124,7 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
         </div>
 
         {/* Customer Directory Table */}
-        <div className="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {loading ? (
             <div className="py-16 text-center text-slate-500 text-xs">Searching GST customer directory...</div>
           ) : customers.length === 0 ? (
@@ -133,8 +133,8 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="text-[11px] uppercase tracking-wider text-slate-400 bg-slate-900/80 border-b border-slate-800">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="text-[11px] uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200 font-bold">
                   <tr>
                     <th className="py-3.5 px-6">Customer / Firm</th>
                     <th className="py-3.5 px-6">GSTIN No</th>
@@ -144,56 +144,56 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
                     <th className="py-3.5 px-6 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-100">
                   {customers.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="py-4 px-6 font-bold text-slate-100 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-xs shrink-0">
+                    <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-4 px-6 font-bold text-slate-900 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-extrabold flex items-center justify-center text-xs shrink-0">
                           {c.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-slate-100 font-bold">{c.name}</p>
-                          {c.address && <p className="text-[10px] text-slate-400 truncate max-w-xs">{c.address}</p>}
+                          <p className="text-slate-900 font-bold">{c.name}</p>
+                          {c.address && <p className="text-[10px] text-slate-500 truncate max-w-xs">{c.address}</p>}
                         </div>
                       </td>
 
                       <td className="py-4 px-6">
                         {c.gstin ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-mono text-[11px] font-semibold">
-                            <FileCheck className="w-3 h-3 text-indigo-400" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-800 font-mono text-[11px] font-bold">
+                            <FileCheck className="w-3 h-3 text-blue-600" />
                             <span>{c.gstin}</span>
                           </span>
                         ) : (
-                          <span className="text-slate-500 text-[11px]">Unregistered</span>
+                          <span className="text-slate-400 text-[11px]">Unregistered</span>
                         )}
                       </td>
 
                       <td className="py-4 px-6">
                         {c.state ? (
-                          <span className="text-slate-200 font-medium">
+                          <span className="text-slate-800 font-semibold">
                             {c.stateCode ? `(${c.stateCode}) ` : ''}{c.state}
                           </span>
                         ) : (
-                          <span className="text-slate-500">—</span>
+                          <span className="text-slate-400">—</span>
                         )}
                       </td>
 
                       <td className="py-4 px-6 space-y-0.5">
-                        <p className="flex items-center gap-1.5 text-slate-200">
+                        <p className="flex items-center gap-1.5 text-slate-800 font-medium">
                           <Mail className="w-3 h-3 text-slate-400" />
                           <span>{c.email}</span>
                         </p>
                         {c.phone && (
-                          <p className="flex items-center gap-1.5 text-slate-400 text-[11px]">
-                            <Phone className="w-3 h-3 text-slate-500" />
+                          <p className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                            <Phone className="w-3 h-3 text-slate-400" />
                             <span>{c.phone}</span>
                           </p>
                         )}
                       </td>
 
                       <td className="py-4 px-6 text-center">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-200 font-bold text-[11px]">
-                          <FileText className="w-3 h-3 text-indigo-400" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-bold text-[11px]">
+                          <FileText className="w-3 h-3 text-blue-600" />
                           <span>{c._count?.invoices || 0}</span>
                         </span>
                       </td>
@@ -203,14 +203,14 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
                           <button
                             onClick={() => handleEdit(c)}
                             title="Edit Customer"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(c.id, c.name)}
                             title="Delete Customer"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

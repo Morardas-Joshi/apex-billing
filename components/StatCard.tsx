@@ -23,34 +23,24 @@ export const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const colorStyles = {
     indigo: {
-      bg: 'bg-indigo-500/10',
-      border: 'border-indigo-500/20',
-      text: 'text-indigo-400',
-      glow: 'shadow-indigo-500/10',
+      bg: 'bg-indigo-50',
+      text: 'text-indigo-600',
     },
     emerald: {
-      bg: 'bg-emerald-500/10',
-      border: 'border-emerald-500/20',
-      text: 'text-emerald-400',
-      glow: 'shadow-emerald-500/10',
+      bg: 'bg-emerald-50',
+      text: 'text-emerald-600',
     },
     amber: {
-      bg: 'bg-amber-500/10',
-      border: 'border-amber-500/20',
-      text: 'text-amber-400',
-      glow: 'shadow-amber-500/10',
+      bg: 'bg-amber-50',
+      text: 'text-amber-600',
     },
     rose: {
-      bg: 'bg-rose-500/10',
-      border: 'border-rose-500/20',
-      text: 'text-rose-400',
-      glow: 'shadow-rose-500/10',
+      bg: 'bg-rose-50',
+      text: 'text-rose-600',
     },
     purple: {
-      bg: 'bg-purple-500/10',
-      border: 'border-purple-500/20',
-      text: 'text-purple-400',
-      glow: 'shadow-purple-500/10',
+      bg: 'bg-purple-50',
+      text: 'text-purple-600',
     },
   };
 
@@ -58,24 +48,24 @@ export const StatCard: React.FC<StatCardProps> = ({
 
   return (
     <motion.div
-      whileHover={{ y: -3, transition: { duration: 0.2 } }}
-      className={`glass-panel p-4 rounded-lg relative overflow-hidden transition-all duration-200 ${style.glow}`}
+      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+      className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden transition-all duration-200"
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-medium tracking-wide text-slate-400">{title}</p>
-          <h3 className="text-[26px] font-semibold text-slate-100 mt-1 tracking-tight tabular-nums">{value}</h3>
+          <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">{title}</p>
+          <h3 className="text-2xl font-extrabold text-slate-900 mt-1 tracking-tight tabular-nums">{value}</h3>
         </div>
-        <div className={`p-2 rounded-lg ${style.bg} ${style.text}`}>
-          <Icon className="w-4 h-4" />
+        <div className={`p-3 rounded-xl ${style.bg} ${style.text}`}>
+          <Icon className="w-5 h-5" />
         </div>
       </div>
 
       {(subtitle || trend) && (
-        <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-          {subtitle && <span className="text-slate-400">{subtitle}</span>}
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          {subtitle && <span className="text-slate-500">{subtitle}</span>}
           {trend && (
-            <span className={`font-semibold ${style.text}`}>
+            <span className={`font-bold ${style.text}`}>
               {trend}
             </span>
           )}
