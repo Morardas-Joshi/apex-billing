@@ -1,4 +1,105 @@
 'use client';
-import Link from 'next/link'; import { usePathname,useRouter } from 'next/navigation'; import {BarChart3,Bell,CircleHelp,CreditCard,FileText,LayoutDashboard,LogOut,Package,ReceiptText,Settings,Users} from 'lucide-react'; import { ApexLogo } from './ApexLogo';
-const groups=[['Workspace',[['Overview','/dashboard',LayoutDashboard],['Invoices','/dashboard/invoices',FileText],['Customers','/dashboard/customers',Users],['Payments','/dashboard/payments',CreditCard],['Subscriptions','#',ReceiptText]]],['Insights',[['Revenue','#',BarChart3],['Analytics','#',BarChart3],['Reports','#',FileText]]],['Manage',[['Products','#',Package],['Tax','#',ReceiptText],['Settings','#',Settings]]]] as const;
-export function Sidebar(){const p=usePathname(),r=useRouter();const out=async()=>{await fetch('/api/auth/logout',{method:'POST'});r.push('/login');r.refresh()};return <aside className="app-sidebar"><div><div className="brand"><ApexLogo size={32}/><div><b>APEX</b><small>Billing operations</small></div></div><button className="workspace-switcher"><i/>Apex workspace <span>⌄</span></button>{groups.map(([label,items])=><section key={label}><p className="nav-label">{label}</p>{items.map(([name,href,Icon])=>{const a=href!=='#'&&(p===href||(href!=='/dashboard'&&p?.startsWith(href)));return <Link key={name} href={href} className={'nav-link '+(a?'nav-link-active':'')}><Icon size={16}/><span>{name}</span>{a&&<em/>}</Link>})}</section>)}</div><div className="sidebar-footer"><button className="nav-link"><CircleHelp size={16}/><span>Help center</span></button><button className="nav-link"><Bell size={16}/><span>Notifications</span></button><div className="profile"><div className="avatar">AD</div><div><b>Admin User</b><small>ADMINISTRATOR</small></div><button onClick={out}><LogOut size={15}/></button></div></div></aside>}
+
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import {
+  LayoutDashboard,
+  FileText,
+  Users,
+  CreditCard,
+  LogOut,
+  Settings,
+  HelpCircle,
+  Bell,
+  Sparkles,
+} from 'lucide-react';
+import { ApexLogo } from './ApexLogo';
+
+const groups = [
+  [
+    'WORKSPACE',
+    [
+      ['Overview', '/dashboard', LayoutDashboard],
+      ['Invoices', '/dashboard/invoices', FileText],
+      ['Customers', '/dashboard/customers', Users],
+      ['Payments', '/dashboard/payments', CreditCard],
+    ],
+  ],
+  [
+    'MANAGE',
+    [
+      ['Settings', '#', Settings],
+    ],
+  ],
+] as const;
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+      router.refresh();
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+  };
+
+  return (
+    <aside className="app-sidebar">
+      {/* Brand Header */}
+      <div className="brand-header">
+        <ApexLogo size={32} />
+        <div>
+          <b className="brand-title">APEX BILLING</b>
+          <small className="brand-subtitle">GST ENTERPRISE V1.0</small>
+        </div>
+      </div>
+
+      {/* Navigation Links List (Scrollable area) */}
+      <div className="nav-container">
+        {groups.map(([label, items]) => (
+          <section key={label} className="nav-section">
+            <p className="nav-label">{label}</p>
+            {items.map(([name, href, Icon]) => {
+              const isActive =
+                href !== '#' &&
+                (pathname === href || (href !== '/dashboard' && pathname?.startsWith(href)));
+              return (
+                <Link
+                  key={name}
+                  href={href}
+                  className={`nav-link ${isActive ? 'nav-link-active' : ''}`}
+                >
+                  <Icon size={16} />
+                  <span>{name}</span>
+                  {isActive && <em className="active-indicator" />}
+                </Link>
+              );
+            })}
+          </section>
+        ))}
+      </div>
+
+      {/* Footer Profile & Logout Frame (Always visible, non-clipped) */}
+      <div className="sidebar-footer">
+        <div className="profile-card">
+          <div className="avatar">AD</div>
+          <div className="user-info">
+            <b className="user-name">Admin User</b>
+            <small className="user-role">admin@billing.com</small>
+          </div>
+          <button
+            onClick={handleLogout}
+            title="Logout"
+            className="logout-btn"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}

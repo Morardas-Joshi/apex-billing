@@ -5,25 +5,33 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function CustomersPage() {
-  const initialCustomers = await prisma.customer.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      address: true,
-      createdAt: true,
-      _count: {
-        select: { invoices: true },
+  let formattedCustomers: any[] = [];
+  try {
+    const initialCustomers = await prisma.customer.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        address: true,
+        gstin: true,
+        state: true,
+        stateCode: true,
+        createdAt: true,
+        _count: {
+          select: { invoices: true },
+        },
       },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+      orderBy: { createdAt: 'desc' },
+    });
 
-  const formattedCustomers = initialCustomers.map((c) => ({
-    ...c,
-    createdAt: c.createdAt.toISOString(),
-  }));
+    formattedCustomers = initialCustomers.map((c) => ({
+      ...c,
+      createdAt: c.createdAt.toISOString(),
+    }));
+  } catch (e) {
+    console.error('Error fetching initial customers on server:', e);
+  }
 
   return <CustomersClient initialCustomers={formattedCustomers} />;
 }
